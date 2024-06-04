@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import mne
+# import spacy
 from .config import Config
 
 
@@ -44,3 +45,13 @@ def normalize_data(data: np.array, mode: str="min_max"):
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
     return scaler.fit_transform(data)
+
+
+# def tag_words_pos(list_words: list):
+#     nlp = spacy.load("en_core_web_sm")
+#     list_pos = []
+#     for word in list_words:
+#         doc = nlp(word)
+#         for token in doc:
+#             list_pos.append(token.pos_)
+#     return list_pos
