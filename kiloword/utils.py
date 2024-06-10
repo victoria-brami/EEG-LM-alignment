@@ -8,8 +8,10 @@ from .config import Config
 def read_table(table_path: str):
     return pd.read_csv(table_path)
 
+
 def save_table(df: pd.DataFrame, dest_path: str):
     return df.to_csv(dest_path, index=False)
+
 
 def load_kiloword_metadata(datapath: str = Config().METADATA) -> pd.DataFrame:
     """
@@ -25,7 +27,8 @@ def load_kiloword_metadata(datapath: str = Config().METADATA) -> pd.DataFrame:
         metadata_df.loc[len(metadata_df)] = data
     return metadata_df
 
-def load_data_from_fif(datapath: str=Config().DATA):
+
+def load_data_from_fif(datapath: str = Config().DATA):
     raw = mne.read_epochs(datapath)
     list_features = []
 
@@ -37,21 +40,22 @@ def load_data_from_fif(datapath: str=Config().DATA):
     return np.array(list_features)
 
 
-def normalize_data(data: np.array, mode: str="min_max"):
+def normalize_data(data: np.array, mode: str = "min_max"):
     if mode == "min_max":
         from sklearn.preprocessing import MinMaxScaler
         scaler = MinMaxScaler()
+        return scaler.fit_transform(data)
     elif mode == "normal":
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
-    return scaler.fit_transform(data)
+        return scaler.fit_transform(data)
+    return data
 
 
-# def tag_words_pos(list_words: list):
-#     nlp = spacy.load("en_core_web_sm")
-#     list_pos = []
-#     for word in list_words:
-#         doc = nlp(word)
-#         for token in doc:
-#             list_pos.append(token.pos_)
-#     return list_pos
+def parse_table_labels(table: pd.DataFrame,
+                       list_labels: list,
+                       labelcolname: str = "SEMANTIC_FIELD"):
+    labels = table[[labelcolname]]
+    labels = labels.fillna("")
+    tab_labels = pd.DataFrame({k: labels[labelcolname].apply(lambda x: k in x) for k in list_labels})
+    return tab_labels

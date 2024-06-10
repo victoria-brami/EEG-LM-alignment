@@ -91,3 +91,20 @@ def plot_features(features: np.array,
 
     fig.update(**fig_kwargs)
     fig.show()
+
+
+
+def plot_corr_evolution(time: list, correls: list, color: str, **fig_kwargs):
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=time,
+                             y=correls,
+                             mode="markers+lines",
+                             line_color=color,
+                             marker_color=color,
+                             marker_size=6))
+
+    fig.update(**fig_kwargs)
+    fig.show()
+
+#TODO: topography Map of the correlations
