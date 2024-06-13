@@ -77,6 +77,7 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
                                  np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
 
     fig, ax = _prepare_topomap(coords, head_radius=head_radius, rows=rows, cols=cols, size=size, **fig_kwargs)
+    list_contours = []
 
     if (rows, cols) in [(1, 1), (None, None)]:
         grid_z = griddata(coords, values, (grid_x, grid_y), method="cubic")
@@ -91,8 +92,9 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
             grid_x, grid_y = np.meshgrid(np.linspace(coords.min() - margin, coords.max() + margin, grid_res),
                                          np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
 
-            contour = ax[j].contourf(grid_x, grid_y, grid_z, levels=15, cmap=cmap, vmin=-0.3, vmax=0.3)
-            # plt.colorbar(contour)
+            contour = ax[j].contourf(grid_x, grid_y, grid_z,  levels=np.linspace(-0.3, 0.3, 21),
+                                     cmap=cmap, vmin=-0.3, vmax=0.3)
+            list_contours.append(contour)
             ax[j].scatter(coords[:, 0], coords[:, 1], c=values[j], edgecolors="k", cmap=cmap)
             if coords_name is not None:
                 for (xi, yi), text in zip(coords, coords_name):
@@ -104,17 +106,22 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
             if subfig_name is not None:
                 ax[j].set_title(subfig_name[j])
 
-        fig.colorbar(contour, ax=ax.ravel().tolist())
-        fig.tight_layout()
+        fig.colorbar(list_contours[0], ax=ax, orientation='horizontal', fraction=.1)
+
+        # fig.colorbar(contour, ax=ax.ravel().tolist())
+        # fig.tight_layout()
     else:
         for i in range(rows):
             for j in range(cols):
+                if j > len(values[i]) - 1:
+                    break
                 grid_x, grid_y = np.meshgrid(np.linspace(coords.min() - margin, coords.max() + margin, grid_res),
                                              np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
 
                 grid_z = griddata(coords, values[i][j], (grid_x, grid_y), method="cubic")
-                contour = ax[i, j].contourf(grid_x, grid_y, grid_z, levels=15, cmap=cmap, vmin=-0.3, vmax=0.3)
-                # plt.colorbar(contour)
+                contour = ax[i, j].contourf(grid_x, grid_y, grid_z,  levels=np.linspace(-0.5, 0.5, 25),
+                                     cmap=cmap, vmin=-0.5, vmax=0.5)
+                list_contours.append(contour)
                 ax[i, j].scatter(coords[:, 0], coords[:, 1], c=values[i][j], edgecolors="k", cmap=cmap)
 
                 if coords_name is not None:
@@ -127,9 +134,9 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
                 if subfig_name is not None:
                     ax[i, j].set_title(subfig_name[i][j])
         fig.tight_layout()
-        fig.colorbar(contour, ax=ax.ravel().tolist())
+        fig.colorbar(list_contours[0], ax=ax, orientation='vertical', fraction=.05)
 
     if savepath is not None:
         plt.savefig(savepath)  # , bbox_inches="tight"
 
-    plt.show()
+    # plt.show()
