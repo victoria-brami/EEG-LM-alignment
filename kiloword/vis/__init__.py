@@ -1,2 +1,2 @@
-from .topography import *
+from .topography import plot_2d_topomap
 from .visualisation import *

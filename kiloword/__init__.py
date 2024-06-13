@@ -1,5 +1,5 @@
 from .config import Config
-from .dimension_reduction import *
+from kiloword.analysis.dimension_reduction import *
 from kiloword.utils.utils import *
 from kiloword.vis.visualisation import *
 from kiloword.vis.topography import *

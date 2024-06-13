@@ -9,8 +9,9 @@ class CorrelationsTable(BaseTable):
                  name: str = None,
                  table_folder: str = None,
                  table_columns: list = None):
-        super().__init__(name, table_folder)
+
         self.table_struct = {col: [] for col in table_columns}
+        super().__init__(name, table_folder)
         self._load_table()
 
     def _load_table(self):
