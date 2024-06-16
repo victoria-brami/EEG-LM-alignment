@@ -27,6 +27,7 @@ To visualize the evolution of the correlations:
 Here is an example of the different plots generated
 
 <img src = "./assets/topography/pearson_bert_LANGUAGE_correlations.png" width ="200" /><img src = "./assets/topography/pearson_bert_random_LANGUAGE_correlations.png" width ="200" />
+
 <img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="200" /><img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="200" />
 
 
