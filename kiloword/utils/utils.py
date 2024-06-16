@@ -40,7 +40,7 @@ def load_data_from_fif(datapath: str = Config().DATA):
     return np.array(list_features)
 
 
-def split_into_chunks(input_list: list, chunk_size: int=10):
+def split_into_chunks(input_list: list, chunk_size: int = 10):
     # Using list comprehension to split the list into chunks
     return [input_list[i:i + chunk_size] for i in range(0, len(input_list), chunk_size)]
 
@@ -61,12 +61,15 @@ def parse_table_labels(table: pd.DataFrame,
                        list_labels: list,
                        labelcolname: str = "SEMANTIC_FIELD"):
     labels = table[[labelcolname]]
-    labels = labels.fillna("")
-    tab_labels = pd.DataFrame({k: labels[labelcolname].apply(lambda x: k in x) for k in list_labels})
+    if labelcolname == "SEMANTIC_FIELD":
+        labels = labels.fillna("")
+        tab_labels = pd.DataFrame({k: labels[labelcolname].apply(lambda x: k in x) for k in list_labels})
+    else:
+        tab_labels = pd.DataFrame({labelcolname: labels[labelcolname].apply(lambda x: x == "YES")})
     return tab_labels
 
 
-def extract_correlations_and_periods(grouped_tab: pd.core.groupby.generic.DataFrameGroupBy):
+def extract_correlations_and_periods(grouped_tab):
     pears_corr_values = []
     spear_corr_values = []
     sub_titles = []
@@ -74,6 +77,6 @@ def extract_correlations_and_periods(grouped_tab: pd.core.groupby.generic.DataFr
     for i, (state, frame) in enumerate(grouped_tab):
         pears_corr_values.append(frame["pearson"].values)
         spear_corr_values.append(frame["spearman"].values)
-        sub_titles.append(f"{int(float(state)*1000 / 256)} to {int(frame['truncate_end'].values[0]*1000 / 256)} ms")
+        sub_titles.append(f"{int(float(state) * 1000 / 256)} to {int(frame['truncate_end'].values[0] * 1000 / 256)} ms")
 
     return pears_corr_values, spear_corr_values, sub_titles

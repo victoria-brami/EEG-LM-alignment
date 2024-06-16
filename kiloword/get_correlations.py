@@ -26,8 +26,8 @@ LIST_LABELS = ["ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--focus_label", type=str,
-                        default="ENTERTAINMENT",
-                        choices=LIST_LABELS,
+                        default=None,
+                        # choices=LIST_LABELS,
                         help="compute correlations of a specific semantic field")
     parser.add_argument("--save_folder", type=str,
                         default="/home/viki/Downloads/kiloword_correlations",
@@ -53,22 +53,34 @@ def arg_parser():
     parser.add_argument("--pad_step", type=int,
                         default=10,
                         help="padding step")
+    # parser.add_argument("--value", type=str,
+    #                     default=10,
+    #                     help="")
     parser.add_argument("--timesteps", type=int,
                         default=31,
-                        help="durtion of the eeg signals extracted")
+                        help="duration of the eeg signals extracted")
     return parser.parse_args()
 
 
 def main(args):
-
     # Download the labels
     labels = read_table(args.labels_path)
-    labels_table = parse_table_labels(labels, LIST_LABELS)
+    labels_table = parse_table_labels(labels, LIST_LABELS,
+                                      labelcolname="SEMANTIC_FIELD",
+                                      )
+
     all_ids = np.arange(len(labels))
 
     if args.focus_label is not None:
-        all_ids = labels_table[labels_table[args.focus_label] == True].index
+        if args.focus_label == "OBJECT":
+            all_ids = labels[labels["MATERIAL"] == "YES"].index
+        elif args.focus_label == "ABSTRACT":
+            all_ids = labels[labels["MATERIAL"] != "YES"].index
+        else:
+            all_ids = labels_table[labels_table[args.focus_label] == True].index
         args.tab_name = "_".join([args.focus_label, args.tab_name])
+    else:
+        args.tab_name = "_".join(["ALL", args.tab_name])
 
     args.tab_name = "_".join([args.word_dist_repr, args.tab_name])
     # Get the list of words and their pairs
@@ -135,28 +147,30 @@ def main(args):
                          pad_step=args.pad_step,
                          timesteps=args.timesteps)
 
-
     print("DONE")
 
 
 if __name__ == '__main__':
     from tqdm import tqdm
     from copy import deepcopy
+
     args = arg_parser()
+    main(args)
     t_name = deepcopy(args.tab_name)
-    for elt in tqdm(LIST_LABELS, total=len(LIST_LABELS), desc="Processins ..."):
-        args.focus_label = elt
-        args.tab_name = t_name
-        args.word_dist_repr = "bert"
-        main(args)
-        args.tab_name = t_name
-        args.focus_label = elt
-        args.word_dist_repr = "bert_random"
-        main(args)
-        args.tab_name = t_name
-        args.focus_label = elt
-        args.word_dist_repr = "levenshtein"
-        main(args)
-        args.focus_label = elt
-        args.word_dist_repr = "levenshtein_ipa"
-        main(args)
+    # from tqdm import tqdm
+    # for elt in tqdm(LIST_LABELS, total=len(LIST_LABELS), desc="Processing ..."):
+    #     args.focus_label = elt
+    #     args.tab_name = t_name
+    #     args.word_dist_repr = "bert"
+    #     main(args)
+    #     args.tab_name = t_name
+    #     args.focus_label = elt
+    #     args.word_dist_repr = "bert_random"
+    #     main(args)
+    #     args.tab_name = t_name
+    #     args.focus_label = elt
+    #     args.word_dist_repr = "levenshtein"
+    #     main(args)
+    #     args.focus_label = elt
+    #     args.word_dist_repr = "levenshtein_ipa"
+    #     main(args)
