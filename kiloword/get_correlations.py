@@ -38,6 +38,8 @@ def arg_parser():
     parser.add_argument("--labels_path", type=str,
                         default=cfg.LABELS_PATH,
                         help="File containing the annotations")
+    parser.add_argument("--use_model_cache", type=bool, action="store_true",
+                        help="whether to load pre-computed word representations or not")
     parser.add_argument("--eeg_path", type=str,
                         default=cfg.DATA,
                         help="File containing the EEG recordings")
@@ -119,17 +121,25 @@ def main(args):
         list_paired_ipa_words = all_pairs(list_ipa_words)
         dl_word_distances = compute_all_dl_distance(list_paired_ipa_words, normalize=True)
     else:
-        # load Bert representations
-        if args.word_dist_repr == "bert":
-            word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
-        elif args.word_dist_repr == "bert_random":
-            word_features = np.load(os.path.join(args.save_folder, "kiloword_random_bert_features.npy"))[all_ids]
-        elif args.word_dist_repr == "hubert":
-            word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_hubert_features.npy"))[all_ids]
-        elif args.word_dist_repr == "hubert_random":
-            word_features = np.load(os.path.join(args.save_folder, "kiloword_random_hubert_features.npy"))[all_ids]
+        if args.use_model_cache:
+            # load Bert representations
+            if args.word_dist_repr == "bert":
+                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
+            elif args.word_dist_repr == "bert_random":
+                word_features = np.load(os.path.join(args.save_folder, "kiloword_random_bert_features.npy"))[all_ids]
+            elif args.word_dist_repr == "hubert":
+                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_hubert_features.npy"))[all_ids]
+            elif args.word_dist_repr == "hubert_random":
+                word_features = np.load(os.path.join(args.save_folder, "kiloword_random_hubert_features.npy"))[all_ids]
+            else:
+                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
+
         else:
-            word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
+            if "bert" in args.word_dist_repr:
+                from transformers import BertTokenizer, BertConfig, BertModel
+                tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+                model = BertModel.from_pretrained("bert-base-uncased")
+                word_features = get_model_representations()
 
         cosine_word_distances = compute_all_representations_distances(word_features.squeeze(1),
                                                                       list_paired_indices,

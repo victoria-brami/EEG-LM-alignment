@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-from typing import Union
+from typing import Union, List
 import torch
 from tqdm import tqdm
 from scipy.stats import pearsonr, spearmanr
-from transformers import PreTrainedModel
+from transformers import PreTrainedModel, PreTrainedTokenizer
 from kiloword.utils.utils import normalize_data
 from sklearn.cluster import KMeans
 from pyxdameraulevenshtein import (
@@ -34,7 +34,7 @@ def extract_same_electrode_rows(electrodes: Union[list, str],
 def get_representations(inputs: Union[list, torch.tensor],
                         model: PreTrainedModel) -> np.array:
     model.eval()
-    hiddens = []
+    hidden = []
 
     with torch.no_grad():
         for i in tqdm(range(len(inputs))):
@@ -43,14 +43,18 @@ def get_representations(inputs: Union[list, torch.tensor],
             else:
                 outputs = model(inputs[i])
             hidden_states = outputs.last_hidden_state.cpu().numpy()
-            hiddens.append(hidden_states[:, 0])
-        return np.stack(hiddens)
+            hidden.append(hidden_states[:, 0])
+        return np.stack(hidden)
 
 
-def get_bert_representations(inputs: Union[list, torch.tensor],
-                             model: PreTrainedModel) -> np.array:
+def get_model_representations(inputs: Union[List[str], List[dict], torch.tensor],
+                              model: PreTrainedModel,
+                              tokenizer: PreTrainedTokenizer = None) -> np.array:
     model.eval()
     hiddens = []
+
+    if isinstance(inputs[0], str):
+        inputs = [tokenizer(w, padding=True, return_tensors="pt") for w in inputs]
 
     with torch.no_grad():
         for i in tqdm(range(len(inputs))):
@@ -125,7 +129,6 @@ def compute_correlations(eegs,
                          corr_table,
                          pad_step=10,
                          timesteps=31):
-
     for start_trunc in range(0, eegs.shape[-1] - timesteps + 1, pad_step):
         period = range(start_trunc, start_trunc + timesteps)
 
@@ -154,7 +157,7 @@ def compute_correlations(eegs,
                         "spearman": None}
 
             # reshaped_eegs = reegs.mean(1)
-            cosine_distances = compute_all_representations_distances(reshaped_eegs, list_paired_indices,  norm="cosine")
+            cosine_distances = compute_all_representations_distances(reshaped_eegs, list_paired_indices, norm="cosine")
             l2_distances = compute_all_representations_distances(reshaped_eegs, list_paired_indices)
 
             if cosine_word_distances is not None:
@@ -165,7 +168,6 @@ def compute_correlations(eegs,
                 row_dict["pearson"] = pears_cos
                 row_dict["spearman"] = spear_cos
                 corr_table.update_table(row_dict)
-
 
             if l2_word_distances is not None:
                 pears_l2, _ = pearsonr(l2_word_distances, l2_distances)
@@ -195,4 +197,3 @@ def compute_correlations(eegs,
                 corr_table.update_table(row_dict)
 
             corr_table.save_table()
-
