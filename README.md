@@ -25,18 +25,15 @@ To visualize the evolution of the correlations:
     python3.10 -m kiloword.correlations_visualisation --tab_name <csv_correlations_name>
 ```
 Here is an example of the different plots generated
-<p>
-<b style="text-align:center;margin-right:8%;margin-left:5%;margin-bottom:13%;font-size:14pt;">Pearson Correlation with</b>
-<b style="text-align:center;margin-right:2%;margin-left:7%;margin-bottom:13%;font-size:14pt;">Pearson Correlation with</b><br>
-<b style="text-align:center;margin-right:4%;margin-left:3%;font-size:14pt;margin-top:63%;">Trained Bert word Representations</b>
-<b style="text-align:center;margin-right:10%;margin-left:5%;font-size:14pt;">Random Bert word Representations</b><br><br>
+<p style="text-align:center;margin-right:8%;margin-left:2%;font-size:12pt;">
+<b style="margin-right:10%;margin-left:0%;">Pearson Correlation with</b><b style="margin-left:8%;">Pearson Correlation with</b><br>
+<b style="margin-right:8%;margin-left:0%;">Trained Bert word Representations</b>
+<b style="margin-left:4%;">Random Bert word Representations</b><br><br>
     <img src = "./assets/topography/pearson_bert_LANGUAGE_correlations.png" width ="400" style="margin-right: 4em"/>
-    <img src = "./assets/topography/pearson_bert_random_LANGUAGE_correlations.png" width ="400" />
-</p><p>
-<b style="text-align:center;margin-right:8%;margin-left:5%;margin-bottom:13%;font-size:14pt;">Pearson Correlation with</b>
-<b style="text-align:center;margin-right:2%;margin-left:7%;margin-bottom:13%;font-size:14pt;">Pearson Correlation with</b><br>
-<b style="text-align:center;margin-right:1%;margin-left:2%;font-size:14pt;margin-top:63%;">Levensthein-distance between words</b>
-<b style="text-align:center;margin-right:10%;margin-left:6%;font-size:14pt;">Levensthein-distance between IPA words</b><br><br>
+    <img src = "./assets/topography/pearson_bert_random_LANGUAGE_correlations.png" width ="400" /><br><br>
+<b style="margin-right:10%;margin-left:0%;">Pearson Correlation with</b><b style="margin-left:8%;">Pearson Correlation with</b><br>
+<b style="margin-right:8%;margin-left:2%;">Levensthein-distance between words</b>
+<b style="margin-left:3%;">Levensthein-distance between IPA words</b><br><br>
     <img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="400" style="margin-right: 4em"/>
     <img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="400" />
 </p>
