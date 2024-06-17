@@ -8,6 +8,7 @@ from kiloword.config import Config as cfg
 from kiloword.utils import read_table, parse_table_labels
 from kiloword.analysis import (
     all_pairs,
+    get_model_representations,
     compute_all_representations_distances,
     compute_all_dl_distance,
     compute_correlations
@@ -45,19 +46,17 @@ def arg_parser():
                         help="File containing the EEG recordings")
     parser.add_argument("--word_dist_repr", type=str,
                         default="bert",
-                        choices=["bert", "bert_random", "hubert",
-                                 "hubert_random", "levenshtein", "levenshtein_ipa"],
+                        choices=["bert", "bert_random", "hubert", "hubert_random",
+                                 "levenshtein", "levenshtein_ipa"],
                         help="Word representations type")
     parser.add_argument("--tab_attrs", type=list,
-                        default=['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman'],
+                        default=['Channel', 'distance', 'truncate_start',
+                                 'truncate_end', 'pearson', 'spearman'],
                         nargs="+",
                         help="keys to figure in the saved documents")
     parser.add_argument("--pad_step", type=int,
                         default=10,
                         help="padding step")
-    # parser.add_argument("--value", type=str,
-    #                     default=10,
-    #                     help="")
     parser.add_argument("--timesteps", type=int,
                         default=31,
                         help="duration of the eeg signals extracted")
@@ -67,9 +66,7 @@ def arg_parser():
 def main(args):
     # Download the labels
     labels = read_table(args.labels_path)
-    labels_table = parse_table_labels(labels, LIST_LABELS,
-                                      labelcolname="SEMANTIC_FIELD",
-                                      )
+    labels_table = parse_table_labels(labels, LIST_LABELS, labelcolname="SEMANTIC_FIELD")
 
     all_ids = np.arange(len(labels))
 
@@ -139,7 +136,7 @@ def main(args):
                 from transformers import BertTokenizer, BertConfig, BertModel
                 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
                 model = BertModel.from_pretrained("bert-base-uncased")
-                word_features = get_model_representations()
+                word_features = get_model_representations(list_words, model, tokenizer)
 
         cosine_word_distances = compute_all_representations_distances(word_features.squeeze(1),
                                                                       list_paired_indices,
