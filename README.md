@@ -1,4 +1,5 @@
 # Kiloword
+This repository contains the code to generate the Correlations between words' computational representations and Brain signals.
 
 ## Usage
 Processing and analysing kiloword dataset. The file <a id="./data/words_and_pos.csv">words_and_pos.csv</a> contains
@@ -25,19 +26,26 @@ To visualize the evolution of the correlations:
     python3.10 -m kiloword.correlations_visualisation --tab_name <csv_correlations_name>
 ```
 Here is an example of the different plots generated
-<p style="text-align:center;margin-right:8%;margin-left:2%;font-size:12pt;">
-<b style="margin-right:10%;margin-left:0%;">Pearson Correlation with</b><b style="margin-left:8%;">Pearson Correlation with</b><br>
-<b style="margin-right:8%;margin-left:0%;">Trained Bert word Representations</b>
-<b style="margin-left:4%;">Random Bert word Representations</b><br><br>
-    <img src = "./assets/topography/pearson_bert_LANGUAGE_correlations.png" width ="400" style="margin-right: 4em"/>
-    <img src = "./assets/topography/pearson_bert_random_LANGUAGE_correlations.png" width ="400" /><br><br>
-<b style="margin-right:10%;margin-left:0%;">Pearson Correlation with</b><b style="margin-left:8%;">Pearson Correlation with</b><br>
-<b style="margin-right:8%;margin-left:2%;">Levensthein-distance between words</b>
-<b style="margin-left:3%;">Levensthein-distance between IPA words</b><br><br>
-    <img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="400" style="margin-right: 4em"/>
-    <img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="400" />
-</p>
 
+
+<table style="text-align:center;align-items:center;align-self:center;border: none;">
+  <tr style="font-size: 12pt; margin-bottom: 4px;">
+<td ><b>Pearson Correlation with Trained Bert word Representations</b></td>
+<td><b>Pearson Correlation with Random Bert word Representations</b></td>
+  </tr>
+  <tr style="margin-bottom: 14px;">
+    <td><img src = "./assets/topography/pearson_bert_LANGUAGE_correlations.png" width ="600"/></td>
+    <td><img src = "./assets/topography/pearson_bert_random_LANGUAGE_correlations.png" width ="600"/></td>
+  </tr>
+   <tr style="font-size: 12pt; margin-bottom: 4px;">
+    <td><b>Pearson Correlation with Levensthein-distance between words</b></td>
+    <td><b>Pearson Correlation with Levensthein-distance between IPA words</b></td>
+  </tr>
+<tr>
+    <td><img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="600" /></td>
+    <td><img src = "./assets/topography/pearson_levenshtein_LANGUAGE_correlations.png" width ="600" /></td>
+</tr>
+</table>
 
 
 ## References
