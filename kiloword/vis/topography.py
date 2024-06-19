@@ -121,8 +121,8 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
                                              np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
 
                 grid_z = griddata(coords, values[i][j], (grid_x, grid_y), method="cubic")
-                contour = ax[i, j].contourf(grid_x, grid_y, grid_z,  levels=np.linspace(-0.7, 0.7, 25),
-                                     cmap=cmap, vmin=-0.7, vmax=0.7)
+                contour = ax[i, j].contourf(grid_x, grid_y, grid_z,  levels=np.linspace(vmin, vmax, 25),
+                                     cmap=cmap, vmin=vmin, vmax=vmax)
                 list_contours.append(contour)
                 ax[i, j].scatter(coords[:, 0], coords[:, 1], c=values[i][j], edgecolors="k", cmap=cmap)
 

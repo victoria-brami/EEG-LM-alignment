@@ -39,9 +39,18 @@ def main(args):
     # Load the electrodes coordinates
     electrodes_pos = np.load(os.path.join(cfg.MNE_PATH, "locs3d.npy"))[:, :2]
 
+    # Plot correlations topographies
+    label_name = os.path.basename(args.tab_name).split("_")[-2]
+    args.save_folder = os.path.join(args.save_folder, label_name)
+
+    if not os.path.exists(os.path.join(args.save_folder, label_name)):
+        os.mkdir(os.path.join(args.save_folder, label_name))
+
+    corr_save_folder = os.path.join(args.save_folder, "csv")
+
     # Load Experiment Results table
     corr = CorrelationsTable(name=args.tab_name,
-                             table_folder=args.save_folder,
+                             table_folder=corr_save_folder,
                              table_columns=args.tab_attrs,
                              eval=True)
 
@@ -57,14 +66,15 @@ def main(args):
     spear_corr_values = split_into_chunks(spear_corr_values, 8)
     sub_titles = split_into_chunks(sub_titles, 8)
 
-
     # Plot correlations topographies
+    label_name = os.path.basename(corr.table_path).split("_")[-2]
     topo_name = os.path.basename(corr.table_path).replace("csv", "png")
-    pears_dest_file_path = os.path.join(args.save_folder, f"pearson_{topo_name}")
-    spear_dest_file_path = os.path.join(args.save_folder, f"spearman_{topo_name}")
+    if not os.path.exists(os.path.join(args.save_folder, "image")):
+        os.mkdir(os.path.join(args.save_folder,  "image"))
+    pears_dest_file_path = os.path.join(args.save_folder,  "image", f"pearson_{topo_name}")
+    spear_dest_file_path = os.path.join(args.save_folder,  "image", f"spearman_{topo_name}")
 
     n_rows, n_cols = len(pears_corr_values), len(pears_corr_values[0])
-
 
     print(n_rows, n_cols, len(pears_corr_values[0][0]))
 

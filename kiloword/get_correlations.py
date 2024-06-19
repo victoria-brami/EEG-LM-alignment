@@ -21,44 +21,43 @@ LIST_LABELS = ["ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
                "DEVICE", "FAMILY", "MUSIC", "CRIME", "CATASTROPHE",
                "ARMY", "TIME", "SCHOOL", "CLEANNESS", "DEATH",
                "GLORY", "BODY", "PEOPLE", "MEDICAL", "MATERIAL",
-               "GOVERN", "SCIENCE", "PHILOSOPHY"]
+               "GOVERN", "SCIENCE", "PHILOSOPHY", "FEELING"]
 
 
 def arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--focus_label", type=str,
-                        default=None,
-                        # choices=LIST_LABELS,
+    parser.add_argument("--focus_label", type=str, default=None,  # choices=LIST_LABELS,
                         help="compute correlations of a specific semantic field")
     parser.add_argument("--save_folder", type=str,
                         default="/home/viki/Downloads/kiloword_correlations",
                         help="folder where the experiments are saved")
-    parser.add_argument("--tab_name", type=str,
-                        default="correlations.csv",
+    parser.add_argument("--tab_name", type=str, default="correlations.csv",
                         help="Name of the document where the experiments are saved")
-    parser.add_argument("--labels_path", type=str,
-                        default=cfg.LABELS_PATH,
+    parser.add_argument("--labels_path", type=str, default=cfg.LABELS_PATH,
                         help="File containing the annotations")
-    parser.add_argument("--use_model_cache", type=bool, action="store_true",
+    parser.add_argument("--use_model_cache", action="store_true", default=True,
                         help="whether to load pre-computed word representations or not")
-    parser.add_argument("--eeg_path", type=str,
-                        default=cfg.DATA,
+    parser.add_argument("--eeg_path", type=str, default=cfg.DATA,
                         help="File containing the EEG recordings")
-    parser.add_argument("--word_dist_repr", type=str,
-                        default="bert",
-                        choices=["bert", "bert_random", "hubert", "hubert_random",
+    parser.add_argument("--word_dist_repr", type=str, default="bert",
+                        choices=["bert", "bert_layer_0", "bert_layer_1", "bert_layer_2",
+                                 "bert_layer_3", "bert_layer_4", "bert_layer_5", "bert_layer_6",
+                                 "bert_layer_7", "bert_layer_8", "bert_layer_9", "bert_layer_10",
+                                 "bert_layer_10", "bert_layer_11",
+                                 "bert_random",
+                                 "hubert", "hubert_random",
+                                 "canine_s", "canine_c",
+                                 *[f"canine_s_layer_{i}" for i in range(17)], *[f"canine_c_layer_{i}" for i in range(17)],
+                                 "canine_c_random", "canine_s_random",
                                  "levenshtein", "levenshtein_ipa"],
                         help="Word representations type")
-    parser.add_argument("--tab_attrs", type=list,
+    parser.add_argument("--tab_attrs", type=list, nargs="+",
                         default=['Channel', 'distance', 'truncate_start',
                                  'truncate_end', 'pearson', 'spearman'],
-                        nargs="+",
                         help="keys to figure in the saved documents")
-    parser.add_argument("--pad_step", type=int,
-                        default=10,
+    parser.add_argument("--pad_step", type=int, default=10,
                         help="padding step")
-    parser.add_argument("--timesteps", type=int,
-                        default=31,
+    parser.add_argument("--timesteps", type=int, default=31,
                         help="duration of the eeg signals extracted")
     return parser.parse_args()
 
@@ -87,9 +86,15 @@ def main(args):
     list_paired_words = all_pairs(list_words)
     list_paired_indices = all_pairs(range(len(list_words)))
 
+    if args.focus_label is not None:
+        corr_save_folder = os.path.join(args.save_folder, args.focus_label)
+        os.makedirs(corr_save_folder, exist_ok=True)
+    corr_save_folder = os.path.join(corr_save_folder, "csv")
+    os.makedirs(corr_save_folder, exist_ok=True)
+
     # Initialize Experiment table
     corr = CorrelationsTable(name=args.tab_name,
-                             table_folder=args.save_folder,
+                             table_folder=corr_save_folder,
                              table_columns=args.tab_attrs)
 
     # Download the EEG data and drop non-useful info
@@ -99,7 +104,7 @@ def main(args):
     list_eegs = []
     for word in list_words:
         da = grouped_data.get_group(word)
-        da = da[~da['ELECNAME'].isin(["REJ1", "REJ2", "REJ3"])]  # .drop(columns=['WORD#', 'WORD', 'ELEC#', 'ELECNAME'])
+        da = da[~da['ELECNAME'].isin(["REJ1", "REJ2", "REJ3"])]
         d = da.drop(columns=['WORD#', 'WORD', 'ELEC#', 'ELECNAME']).to_numpy()
         list_eegs.append(d)
     eeg_signals = np.stack(list_eegs)
@@ -119,29 +124,52 @@ def main(args):
         dl_word_distances = compute_all_dl_distance(list_paired_ipa_words, normalize=True)
     else:
         if args.use_model_cache:
-            # load Bert representations
-            if args.word_dist_repr == "bert":
-                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
-            elif args.word_dist_repr == "bert_random":
-                word_features = np.load(os.path.join(args.save_folder, "kiloword_random_bert_features.npy"))[all_ids]
-            elif args.word_dist_repr == "hubert":
-                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_hubert_features.npy"))[all_ids]
-            elif args.word_dist_repr == "hubert_random":
-                word_features = np.load(os.path.join(args.save_folder, "kiloword_random_hubert_features.npy"))[all_ids]
+            if "random" in args.word_dist_repr:
+                word_features = np.load(
+                    os.path.join(args.save_folder,
+                                 "word_features",
+                                 f"kiloword_random_{args.word_dist_repr.split('_random').split('random_')[0]}_features.npy"))[all_ids]
             else:
-                word_features = np.load(os.path.join(args.save_folder, "kiloword_trained_bert_features.npy"))[all_ids]
+                word_features = np.load(
+                    os.path.join(args.save_folder, "word_features",
+                                 f"kiloword_trained_{args.word_dist_repr}_features.npy"))[all_ids]
 
         else:
-            if "bert" in args.word_dist_repr:
+            if args.word_dist_repr == "bert":
                 from transformers import BertTokenizer, BertConfig, BertModel
                 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
                 model = BertModel.from_pretrained("bert-base-uncased")
-                word_features = get_model_representations(list_words, model, tokenizer)
+            elif args.word_dist_repr == "bert_random":
+                from transformers import BertTokenizer, BertConfig, BertModel
+                tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+                model = BertModel(BertConfig())
+            elif args.word_dist_repr == "canine_s":
+                from transformers import CanineTokenizer, CanineConfig, CanineModel
+                tokenizer = CanineTokenizer.from_pretrained("google/canine-s")
+                model = CanineModel.from_pretrained("google/canine-s")
+            elif args.word_dist_repr == "canine_c":
+                from transformers import CanineTokenizer, CanineConfig, CanineModel
+                tokenizer = CanineTokenizer.from_pretrained("google/canine-c")
+                model = CanineModel.from_pretrained("google/canine-s")
+            elif args.word_dist_repr == "canine_s_random":
+                from transformers import CanineTokenizer, CanineConfig, CanineModel
+                tokenizer = CanineTokenizer.from_pretrained("google/canine-s")
+                model = CanineModel(CanineConfig())
 
-        cosine_word_distances = compute_all_representations_distances(word_features.squeeze(1),
+            elif args.word_dist_repr == "canine_c_random":
+                from transformers import CanineTokenizer, CanineConfig, CanineModel
+                tokenizer = CanineTokenizer.from_pretrained("google/canine-c")
+                model = CanineModel(CanineConfig())
+
+            word_features = get_model_representations(list_words, model, tokenizer)
+
+        print("\n\n\n\n", word_features.shape)
+        if len(word_features.shape) == 3:
+            word_features = word_features.squeeze(1)
+        cosine_word_distances = compute_all_representations_distances(word_features,
                                                                       list_paired_indices,
                                                                       norm="cosine")
-        l2_word_distances = compute_all_representations_distances(word_features.squeeze(1),
+        l2_word_distances = compute_all_representations_distances(word_features,
                                                                   list_paired_indices)
 
     compute_correlations(eeg_signals,
