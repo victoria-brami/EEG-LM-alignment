@@ -69,10 +69,13 @@ def main(args):
     # Plot correlations topographies
     label_name = os.path.basename(corr.table_path).split("_")[-2]
     topo_name = os.path.basename(corr.table_path).replace("csv", "png")
+    if args.distance != "l2":
+        topo_name = topo_name.replace(".png", f"_{args.distance}.png")
     if not os.path.exists(os.path.join(args.save_folder, "image")):
         os.mkdir(os.path.join(args.save_folder,  "image"))
     pears_dest_file_path = os.path.join(args.save_folder,  "image", f"pearson_{topo_name}")
     spear_dest_file_path = os.path.join(args.save_folder,  "image", f"spearman_{topo_name}")
+
 
     n_rows, n_cols = len(pears_corr_values), len(pears_corr_values[0])
 

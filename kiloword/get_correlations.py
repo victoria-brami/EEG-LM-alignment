@@ -15,7 +15,7 @@ from kiloword.analysis import (
 )
 from kiloword.evaluation import CorrelationsTable
 
-LIST_LABELS = ["ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
+LIST_LABELS = ["SEPARATION", "LOCATION", "ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
                "POLITICS", "RELIGION", "HOUSE", "MOVE", "SPORT",
                "JUSTICE", "INDUSTRY", "LANGUAGE", "FOOD", "MODE",
                "DEVICE", "FAMILY", "MUSIC", "CRIME", "CATASTROPHE",
@@ -40,15 +40,14 @@ def arg_parser():
     parser.add_argument("--eeg_path", type=str, default=cfg.DATA,
                         help="File containing the EEG recordings")
     parser.add_argument("--word_dist_repr", type=str, default="bert",
-                        choices=["bert", "bert_layer_0", "bert_layer_1", "bert_layer_2",
-                                 "bert_layer_3", "bert_layer_4", "bert_layer_5", "bert_layer_6",
-                                 "bert_layer_7", "bert_layer_8", "bert_layer_9", "bert_layer_10",
-                                 "bert_layer_10", "bert_layer_11",
-                                 "bert_random",
-                                 "hubert", "hubert_random",
+                        choices=["bert", "bert_random",
+                                 *[f"bert_layer_{i}" for i in range(12)],
                                  "canine_s", "canine_c",
-                                 *[f"canine_s_layer_{i}" for i in range(17)], *[f"canine_c_layer_{i}" for i in range(17)],
                                  "canine_c_random", "canine_s_random",
+                                 *[f"canine_s_layer_{i+1}" for i in range(16)],
+                                 *[f"canine_c_layer_{i+1}" for i in range(16)],
+                                 "hubert", "hubert_random",
+                                 "bart", "bart_random",
                                  "levenshtein", "levenshtein_ipa"],
                         help="Word representations type")
     parser.add_argument("--tab_attrs", type=list, nargs="+",
@@ -87,6 +86,10 @@ def main(args):
     list_paired_indices = all_pairs(range(len(list_words)))
 
     if args.focus_label is not None:
+        corr_save_folder = os.path.join(args.save_folder, args.focus_label)
+        os.makedirs(corr_save_folder, exist_ok=True)
+    else:
+        args.focus_label = "ALL"
         corr_save_folder = os.path.join(args.save_folder, args.focus_label)
         os.makedirs(corr_save_folder, exist_ok=True)
     corr_save_folder = os.path.join(corr_save_folder, "csv")
@@ -128,7 +131,7 @@ def main(args):
                 word_features = np.load(
                     os.path.join(args.save_folder,
                                  "word_features",
-                                 f"kiloword_random_{args.word_dist_repr.split('_random').split('random_')[0]}_features.npy"))[all_ids]
+                                 f"kiloword_random_{args.word_dist_repr.split('_random')[0].split('random_')[0]}_features.npy"))[all_ids]
             else:
                 word_features = np.load(
                     os.path.join(args.save_folder, "word_features",

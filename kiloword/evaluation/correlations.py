@@ -22,6 +22,8 @@ class CorrelationsTable(BaseTable):
         # The table exists: load the table directly
         if os.path.isfile(self.table_path):
             self.table = pd.read_csv(self.table_path)
+            if not self.eval:
+                self.table = pd.DataFrame(self.table_struct)
         else:
             if self.eval:
                 raise FileNotFoundError(f"Could not find the file {self.table_path}")
