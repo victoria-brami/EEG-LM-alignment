@@ -73,8 +73,12 @@ def main(args):
         topo_name = topo_name.replace(".png", f"_{args.distance}.png")
     if not os.path.exists(os.path.join(args.save_folder, "image")):
         os.mkdir(os.path.join(args.save_folder,  "image"))
-    pears_dest_file_path = os.path.join(args.save_folder,  "image", f"pearson_{topo_name}")
-    spear_dest_file_path = os.path.join(args.save_folder,  "image", f"spearman_{topo_name}")
+    if not os.path.exists(os.path.join(args.save_folder, "image", "pearson")):
+        os.mkdir(os.path.join(args.save_folder,  "image", "pearson"))
+    if not os.path.exists(os.path.join(args.save_folder, "image", "spearman")):
+        os.mkdir(os.path.join(args.save_folder,  "image", "spearman"))
+    pears_dest_file_path = os.path.join(args.save_folder,  "image", "pearson", f"pearson_{topo_name}")
+    spear_dest_file_path = os.path.join(args.save_folder,  "image", "spearman", f"spearman_{topo_name}")
 
 
     n_rows, n_cols = len(pears_corr_values), len(pears_corr_values[0])
