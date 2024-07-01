@@ -13,7 +13,7 @@ for list_elt in "FEELING" "SEPARATION" "POLITICS" "ENTERTAINMENT" "MONEY" "NATUR
 # "JUSTICE" "INDUSTRY" "LANGUAGE" "FOOD" "MODE" "DEVICE" "FAMILY" "MUSIC" "CRIME" "CATASTROPHE" "ARMY" "TIME" "SCHOOL" "CLEANNESS" "DEATH" "GLORY" "BODY" "PEOPLE" "MEDICAL" "MATERIAL" "GOVERN"
 # "ENTERTAINMENT" "MONEY" "NATURE" "QUANTITY" "RELIGION" "HOUSE" "MOVE" "SPORT""OBJECT" "ABSTRACT" #
 do
-  for word_dist in "bert" "bert_random"
+  for word_dist in "canine_c" "canine_s" #"canine_s" "canine_s_random" "canine_c" "canine_c_random"
   do
     echo $word_dist
     export tab=$word_dist\_$list_elt\_correlations.csv
