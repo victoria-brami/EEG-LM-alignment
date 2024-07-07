@@ -69,6 +69,7 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
                     dpi=100,
                     vmin=-0.5,
                     vmax=0.5,
+                    title=None,
                     **fig_kwargs):
     plt.rcParams["axes.spines.left"] = False
     plt.rcParams["axes.spines.right"] = False
@@ -135,10 +136,13 @@ def plot_2d_topomap(coords, values, grid_res=100, cmap="coolwarm",
                 ax[i, j].set_yticks([])
                 if subfig_name is not None:
                     ax[i, j].set_title(subfig_name[i][j])
+        if title is not None:
+            fig.suptitle(title, fontsize=20)
         fig.tight_layout()
         fig.colorbar(list_contours[0], ax=ax, orientation='vertical', fraction=.05)
 
+
     if savepath is not None:
         plt.savefig(savepath)  # , bbox_inches="tight"
-
+    plt.close()
     # plt.show()

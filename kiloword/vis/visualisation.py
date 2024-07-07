@@ -4,20 +4,21 @@ import plotly.graph_objects as go
 
 COLORS = {
     "NOUN": "indianred",
-   "PROPN": "violet",
-   "VERB": "blue",
-   "ADV": "darkcyan",
-   "ADJ": "darkgreen",
-   "ADP": "darkgoldenrod",
-   "PRON": "darkviolet",
-   "AUX": "dodgerblue",
-   "DET": "grey",
+    "PROPN": "violet",
+    "VERB": "blue",
+    "ADV": "darkcyan",
+    "ADJ": "darkgreen",
+    "ADP": "darkgoldenrod",
+    "PRON": "darkviolet",
+    "AUX": "dodgerblue",
+    "DET": "grey",
     "NUM": "goldenrod",
     "X": "black",
     "SCONJ": "darkorange",
     "CCONJ": "lime",
     "INTJ": "olive"
 }
+
 
 def group_by_labels(labels: list):
     data_labels = [(labels[i], i) for i in range(len(labels))]
@@ -27,6 +28,7 @@ def group_by_labels(labels: list):
     for key, group in groupby(data_labels, key=lambda x: x[0]):
         result[key] = [item[1] for item in group]
     return result
+
 
 def plot_features(features: np.array,
                   vocab: list,
@@ -45,15 +47,15 @@ def plot_features(features: np.array,
         # Add trace
         if h == 3:
             fig.add_trace(go.Scatter3d(x=features[ids, 0],
-                                     y=features[ids, 1],
-                                     z=features[ids, 2],
-                                     mode="markers+text",
-                                     marker_color=color,
-                                     name=key,
-                                     text=[vocab[i] for i in ids],
-                                     marker_size=8,
-                                     textposition="bottom center",
-                                     textfont_color=color))
+                                       y=features[ids, 1],
+                                       z=features[ids, 2],
+                                       mode="markers+text",
+                                       marker_color=color,
+                                       name=key,
+                                       text=[vocab[i] for i in ids],
+                                       marker_size=8,
+                                       textposition="bottom center",
+                                       textfont_color=color))
         else:
             fig.add_trace(go.Scatter(x=features[ids, 0],
                                      y=features[ids, 1],
@@ -91,7 +93,6 @@ def plot_features(features: np.array,
 
     fig.update(**fig_kwargs)
     fig.show()
-
 
 
 def plot_corr_evolution(time: list, correls: list, color: str, **fig_kwargs):

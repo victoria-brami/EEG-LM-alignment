@@ -6,7 +6,11 @@ import pandas as pd
 
 from kiloword.vis import plot_2d_topomap
 from kiloword.config import Config as cfg
-from kiloword.utils import read_table, extract_correlations_and_periods, split_into_chunks
+from kiloword.utils import (
+    read_table,
+    extract_correlations_and_periods,
+    split_into_chunks
+)
 from kiloword.evaluation import CorrelationsTable
 
 
@@ -32,6 +36,23 @@ def vis_parser():
     return parser.parse_args()
 
 
+def build_destination_path(table_path: str = "",
+                           distance_type: str = "l2",
+                           corr_type: str = "spearman"):
+    label_name = os.path.basename(table_path).split("_")[-2]
+    topo_name = os.path.basename(table_path).replace("csv", "png")
+    if args.distance != "l2":
+        topo_name = topo_name.replace(".png", f"_{distance_type}.png")
+    if not os.path.exists(os.path.join(args.save_folder, "image")):
+        os.mkdir(os.path.join(args.save_folder, "image"))
+    if not os.path.exists(os.path.join(args.save_folder, "image", corr_type, distance_type)):
+        os.makedirs(os.path.join(args.save_folder, "image", corr_type, distance_type), exist_ok=True)
+
+    dest_file_path = os.path.join(args.save_folder, "image", corr_type, distance_type, f"{corr_type}_{topo_name}")
+
+    return dest_file_path
+
+
 def main(args):
     # Load the electrodes names
     eeg_data = read_table(cfg.DATA)
@@ -43,8 +64,8 @@ def main(args):
     label_name = os.path.basename(args.tab_name).split("_")[-2]
     args.save_folder = os.path.join(args.save_folder, label_name)
 
-    if not os.path.exists(os.path.join(args.save_folder, label_name)):
-        os.mkdir(os.path.join(args.save_folder, label_name))
+    # if not os.path.exists(os.path.join(args.save_folder, label_name)):
+    #     os.mkdir(os.path.join(args.save_folder, label_name))
 
     corr_save_folder = os.path.join(args.save_folder, "csv")
 
@@ -67,22 +88,11 @@ def main(args):
     sub_titles = split_into_chunks(sub_titles, 8)
 
     # Plot correlations topographies
-    label_name = os.path.basename(corr.table_path).split("_")[-2]
-    topo_name = os.path.basename(corr.table_path).replace("csv", "png")
-    if args.distance != "l2":
-        topo_name = topo_name.replace(".png", f"_{args.distance}.png")
-    if not os.path.exists(os.path.join(args.save_folder, "image")):
-        os.mkdir(os.path.join(args.save_folder,  "image"))
-    # if not os.path.exists(os.path.join(args.save_folder, "image", args.distance)):
-    #     os.mkdir(os.path.join(args.save_folder,  "image", args.distance))
-    if not os.path.exists(os.path.join(args.save_folder, "image", "pearson", args.distance)):
-        os.makedirs(os.path.join(args.save_folder,  "image", "pearson", args.distance), exist_ok=True)
-    if not os.path.exists(os.path.join(args.save_folder, "image", "spearman", args.distance)):
-        os.makedirs(os.path.join(args.save_folder,  "image", "spearman", args.distance), exist_ok=True)
-    pears_dest_file_path = os.path.join(args.save_folder,  "image", "pearson", args.distance, f"pearson_{topo_name}")
-    spear_dest_file_path = os.path.join(args.save_folder,  "image", "spearman", args.distance, f"spearman_{topo_name}")
 
-    #print("len Pearson", len(pears_corr_values), pears_corr_values)
+    pears_dest_file_path = build_destination_path(corr.table_path, args.distance, "pearson")
+    spear_dest_file_path = build_destination_path(corr.table_path, args.distance, "spearman")
+
+    # print("len Pearson", len(pears_corr_values), pears_corr_values)
     n_rows, n_cols = len(pears_corr_values), len(pears_corr_values[0])
 
     print(n_rows, n_cols, len(pears_corr_values[0][0]))
