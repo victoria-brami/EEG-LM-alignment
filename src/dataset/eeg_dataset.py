@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import hilbert
 from omegaconf import OmegaConf
-from torch.utils.data import Dataset
-
+from .base import BaseDataset
 
 def _split_sent_data_into_words_data(start_id: int,
                                      sent_id: str,
@@ -51,13 +50,11 @@ def _compute_eeg_power_signal(sent_eeg: np.array):
     return np.abs(hilbert(sent_eeg) * np.conjugate(hilbert(sent_eeg)))
 
 
-class UBIRADataset(Dataset):
+class UBIRADataset(BaseDataset):
 
     def __init__(self, config, tokenizer=None):
-        self.config = config
-        self.datapath = config.root_path
+        super().__init__(config, tokenizer)
         self.folders = config.list_folders
-        self.tokenizer = tokenizer
         self.eegs = []
         self.meta_data = []
         self._load_sentence_labels()
@@ -132,6 +129,23 @@ class UBIRADataset(Dataset):
 
             elif mode == "sentence":
                 continue
+
+
+class KilowordDataset(BaseDataset):
+
+    def __init__(self, config, tokenizer=None):
+        super().__init__(config, tokenizer)
+        self.data = []
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+    def _load_channels(self):
+        self.channels = pd.read_csv(os.path.join(self.datapath, "locs3d.csv"))
+
 
 
 if __name__ == '__main__':
