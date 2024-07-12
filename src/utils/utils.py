@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import mne
 # import spacy
-from kiloword.config import Config
+from src.config import Config
 
 
 def read_table(table_path: str):

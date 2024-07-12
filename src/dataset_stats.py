@@ -1,9 +1,9 @@
 import pandas as pd
 import argparse
 from config import Config as cfg
-from kiloword.utils import read_table
+from src.utils import read_table
 from collections import Counter
-from kiloword.utils import parse_table_labels
+from src.utils import parse_table_labels
 
 def create_semantic_labels_table():
     orig_df = read_table(cfg.LABELS_PATH)

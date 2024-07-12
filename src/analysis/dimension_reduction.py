@@ -2,7 +2,7 @@ from typing import Union
 import numpy as np
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-from kiloword.utils.utils import normalize_data
+from src.utils.utils import normalize_data
 
 
 def compute_tsne(data: Union[list, np.array],

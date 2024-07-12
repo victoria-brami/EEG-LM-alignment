@@ -4,16 +4,16 @@ import os.path
 import numpy as np
 import pandas as pd
 
-from kiloword.config import Config as cfg
-from kiloword.utils import read_table, parse_table_labels
-from kiloword.analysis import (
+from src.config import Config as cfg
+from src.utils import read_table, parse_table_labels
+from src.analysis import (
     all_pairs,
     get_model_representations,
     compute_all_representations_distances,
     compute_all_dl_distance,
     compute_correlations
 )
-from kiloword.evaluation import CorrelationsTable
+from src.evaluation import CorrelationsTable
 
 LIST_LABELS = ["SEPARATION", "LOCATION", "ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
                "POLITICS", "RELIGION", "HOUSE", "MOVE", "SPORT",

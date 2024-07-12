@@ -4,14 +4,14 @@ import os
 
 import pandas as pd
 
-from kiloword.vis import plot_2d_topomap
-from kiloword.config import Config as cfg
-from kiloword.utils import (
+from src.vis import plot_2d_topomap
+from src.config import Config as cfg
+from src.utils import (
     read_table,
     extract_correlations_and_periods,
     split_into_chunks
 )
-from kiloword.evaluation import CorrelationsTable
+from src.evaluation import CorrelationsTable
 
 
 def vis_parser():

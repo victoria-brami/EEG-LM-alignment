@@ -1,6 +1,6 @@
 import os
 from argparse import ArgumentParser
-from kiloword.vis import create_valid_gif
+from src.vis import create_valid_gif
 
 
 

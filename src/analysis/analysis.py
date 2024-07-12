@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 from scipy.stats import pearsonr, spearmanr
 from transformers import PreTrainedModel, PreTrainedTokenizer
-from kiloword.utils.utils import normalize_data
+from src.utils.utils import normalize_data
 from sklearn.cluster import KMeans
 from pyxdameraulevenshtein import (
     damerau_levenshtein_distance,
