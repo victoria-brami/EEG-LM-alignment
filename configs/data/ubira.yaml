@@ -1,0 +1,13 @@
+
+path:
+  datasets: /home/viki/Documents/Erasmus/data_playground
+
+dataname: ubira
+datapath: ${.path.datasets}/eeg_POS
+list_folders: ["session_0", "session_1", "session_2", "session_3", "session_4", "session_5"]
+truncate: False
+mode: word
+bands: None
+n_sentences: 10
+use_power: True
+labels: ["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]

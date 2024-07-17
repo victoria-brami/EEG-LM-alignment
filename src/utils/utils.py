@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import mne
 # import spacy
-from src.config import Config
+# from src.config import Config
 
 
 def read_table(table_path: str):
@@ -13,7 +13,7 @@ def save_table(df: pd.DataFrame, dest_path: str):
     return df.to_csv(dest_path, index=False)
 
 
-def load_kiloword_metadata(datapath: str = Config().METADATA) -> pd.DataFrame:
+def load_kiloword_metadata(datapath: str) -> pd.DataFrame:
     """
 
     :param datapath: Path to the dataset's metadata (a txt file)
@@ -28,7 +28,7 @@ def load_kiloword_metadata(datapath: str = Config().METADATA) -> pd.DataFrame:
     return metadata_df
 
 
-def load_data_from_fif(datapath: str = Config().DATA):
+def load_data_from_fif(datapath: str):
     raw = mne.read_epochs(datapath)
     list_features = []
 

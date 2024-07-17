@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-from typing import Union, List
+from typing import Union, List, Callable, Tuple
 import torch
 from tqdm import tqdm
 from scipy.stats import pearsonr, spearmanr
-from transformers import PreTrainedModel, PreTrainedTokenizer
+#from transformers import PreTrainedModel, PreTrainedTokenizer
 from src.utils.utils import normalize_data
 from sklearn.cluster import KMeans
 from pyxdameraulevenshtein import (
@@ -32,7 +32,7 @@ def extract_same_electrode_rows(electrodes: Union[list, str],
 
 
 def get_representations(inputs: Union[list, torch.tensor],
-                        model: PreTrainedModel) -> np.array:
+                        model: Callable) -> np.array:
     model.eval()
     hidden = []
 
@@ -48,8 +48,9 @@ def get_representations(inputs: Union[list, torch.tensor],
 
 
 def get_model_representations(inputs: Union[List[str], List[dict], torch.tensor],
-                              model: PreTrainedModel,
-                              tokenizer: PreTrainedTokenizer = None) -> np.array:
+                              layer: int = -1,
+                              model: Callable,
+                              tokenizer: Callable = None) -> np.array:
     model.eval()
     hiddens = []
 
@@ -58,8 +59,11 @@ def get_model_representations(inputs: Union[List[str], List[dict], torch.tensor]
 
     with torch.no_grad():
         for i in tqdm(range(len(inputs))):
-            outputs = model(**inputs[i])
-            hidden_states = outputs.last_hidden_state.cpu().numpy()
+            outputs, hidden = model(**inputs[i], output_hidden_state=(layer != -1))
+            if layer != -1:
+                hidden_states = outputs.hidden_states[layer].cpu().numpy()
+            else:
+                hidden_states = outputs.last_hidden_state.cpu().numpy()
             hiddens.append(hidden_states[:, 0])
         return np.stack(hiddens)
 

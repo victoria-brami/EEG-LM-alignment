@@ -1,19 +1,30 @@
 import os
 from glob import glob
-from typing import List, Optional
+from typing import List, Optional, Dict, Union
 
 import numpy as np
 import pandas as pd
 from scipy.signal import hilbert
 from omegaconf import OmegaConf
-from .base import BaseDataset
+from transformers import AutoTokenizer
+from src.dataset.base import BaseDataset
+
+from src.utils import read_table, parse_table_labels
+
+LIST_LABELS = ["SEPARATION", "LOCATION", "ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
+               "POLITICS", "RELIGION", "HOUSE", "MOVE", "SPORT",
+               "JUSTICE", "INDUSTRY", "LANGUAGE", "FOOD", "MODE",
+               "DEVICE", "FAMILY", "MUSIC", "CRIME", "CATASTROPHE",
+               "ARMY", "TIME", "SCHOOL", "CLEANNESS", "DEATH",
+               "GLORY", "BODY", "PEOPLE", "MEDICAL", "MATERIAL",
+               "GOVERN", "SCIENCE", "PHILOSOPHY", "FEELING"]
+
 
 def _split_sent_data_into_words_data(start_id: int,
                                      sent_id: str,
                                      eeg_sig: np.array,
                                      labels_df: pd.DataFrame,
-                                     filter_pos: Optional[List[str]] = None):
-
+                                     filter_labels: Optional[List[str]] = None):
     word_data_list = []
     sentence = " ".join(labels_df["word"].values)
     for i, row in labels_df.iterrows():
@@ -34,7 +45,7 @@ def _split_sent_data_into_words_data(start_id: int,
             "next_len": row["next_len"],
         }
         # Apply Specific label filtering if needed
-        if filter_pos is not None and sample["pos"] not in filter_pos:
+        if filter_labels is not None and sample["pos"] not in filter_labels:
             continue
         word_data_list.append(sample)
 
@@ -52,14 +63,15 @@ def _compute_eeg_power_signal(sent_eeg: np.array):
 
 class UBIRADataset(BaseDataset):
 
-    def __init__(self, config, tokenizer=None):
-        super().__init__(config, tokenizer)
-        self.folders = config.list_folders
+    def __init__(self, cfg, tokenizer=None):
+        super().__init__(cfg, tokenizer)
+        self.folders = cfg.list_folders
         self.eegs = []
         self.meta_data = []
         self._load_sentence_labels()
         self._load_channels()
-        self._load_data(mode=config.mode, use_power=config.use_power)
+        self._load_data(mode=cfg.mode, use_power=cfg.use_power)
+        self._word_list = self._get_dataset_words()
 
     def __len__(self):
         return len(self.data)
@@ -123,12 +135,17 @@ class UBIRADataset(BaseDataset):
                                                                   sent_id_name,
                                                                   eeg_sig,
                                                                   labels_df,
-                                                                  filter_pos=self.config.labels)
+                                                                  filter_labels=self.filter_labels)
                 self.data.extend(word_data_list)
                 self.start_id += len(word_data_list) - 1
 
             elif mode == "sentence":
                 continue
+    def _get_dataset_words(self):
+        list_words = []
+        for i in range(len(self.data)):
+            list_words.append(self.data[i]["word"])
+        return list_words
 
 
 class KilowordDataset(BaseDataset):
@@ -136,6 +153,10 @@ class KilowordDataset(BaseDataset):
     def __init__(self, config, tokenizer=None):
         super().__init__(config, tokenizer)
         self.data = []
+        self._load_channels()
+        self._load_labels()
+        self.words_list = self._get_dataset_words()
+        self._load_data()
 
     def __len__(self):
         return len(self.data)
@@ -143,14 +164,58 @@ class KilowordDataset(BaseDataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
+    def _load_labels(self):
+        self.labels = pd.read_csv(os.path.join(self.datapath, "words_and_pos.csv"))
+        self.labels_df = parse_table_labels(self.labels, LIST_LABELS,  # Here self.filter_labels must be LIST_LABELS
+                                            labelcolname="SEMANTIC_FIELD")
+
+        # Filter the labels
+        if self.filter_labels is not None:
+            if self.filter_labels == "OBJECT":
+                all_ids = self.labels[self.labels["MATERIAL"] == "YES"].index
+            elif self.filter_labels == "ABSTRACT":
+                all_ids = self.labels[self.labels["MATERIAL"] != "YES"].index
+            else:
+                all_ids = self.labels_df[self.labels_df[self.filter_labels] is True].index
+        else:
+            self.all_ids = len(self.labels)
+
+    def _get_dataset_words(self):
+        return self.labels["WORD"].values[self.all_ids]
+
     def _load_channels(self):
         self.channels = pd.read_csv(os.path.join(self.datapath, "locs3d.csv"))
 
+    def _load_data(self):
+        # THen retrieve all the filtered data
+        eeg_data = read_table(os.path.join(self.datapath, "KWORD_ERP_LEXICAL_DECISION_DGMH2015.csv"))
+
+        grouped_data = eeg_data.groupby("WORD")
+        for i, word in enumerate(self.words_list):
+            da = grouped_data.get_group(word)
+            da = da[~da['ELECNAME'].isin(["REJ1", "REJ2", "REJ3"])]
+            d = da.drop(columns=['WORD#', 'WORD', 'ELEC#', 'ELECNAME']).to_numpy()
+            sample = {
+                "raw_eeg_input_ids": d,
+                "id": i,
+                "pos": None,
+                "len": len(word),
+                "word": word
+            }
+            self.data.append(sample)
+
+def get_dataset(config: Union[Dict, OmegaConf],
+                tokenizer: AutoTokenizer,
+                dataname: str):
+    if dataname.lower() == "kiloword":
+        return KilowordDataset(config, tokenizer)
+    elif dataname.lower() == "ubira":
+        return UBIRADataset(config, tokenizer)
 
 
 if __name__ == '__main__':
-    conf = OmegaConf.load("../../tests/config.yaml")
-    config =  conf.dataset
+    conf = OmegaConf.load("../tests/config.yaml")
+    config = conf.dataset
     dataset = UBIRADataset(config)
     print("Data Length", len(dataset), "\n")
     print([dataset[i]["id"] for i in range(len(dataset))])

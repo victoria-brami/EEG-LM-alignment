@@ -12,8 +12,9 @@ class BaseDataset(Dataset):
 
     def __init__(self, config: Union[dict, OmegaConf], tokenizer: Optional[AutoTokenizer] = None):
         self.config = config
-        self.datapath = config.root_path
+        self.datapath = config.datapath
         self.tokenizer = tokenizer
+        self.filter_labels = config.labels
 
     def _load_channels(self):
         """ Method to load the electrodes names and 3d Positions"""
@@ -21,4 +22,8 @@ class BaseDataset(Dataset):
 
     def _load_data(self):
         """ Method to load the EEG data and its corresponding labels"""
+        raise NotImplementedError
+
+    def _get_dataset_words(self):
+        """ Method to get all the words paired to a given signal """
         raise NotImplementedError
