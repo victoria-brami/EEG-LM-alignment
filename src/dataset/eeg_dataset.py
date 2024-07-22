@@ -1,7 +1,7 @@
 import os
 from glob import glob
 from typing import List, Optional, Dict, Union
-
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from scipy.signal import hilbert
@@ -123,7 +123,7 @@ class UBIRADataset(BaseDataset):
         self.start_id = 0
 
         # Iterate on sentence level
-        for sent_i, row in self.sentence_labels.iterrows():
+        for sent_i, row in tqdm(self.sentence_labels.iterrows(), total=self.config.n_sentences):
             if sent_i > self.config.n_sentences:
                 break
             sent_id_name = row["common_id"]
@@ -214,9 +214,10 @@ def get_dataset(config: Union[Dict, OmegaConf],
 
 
 if __name__ == '__main__':
-    conf = OmegaConf.load("../tests/config.yaml")
-    config = conf.dataset
+    conf = OmegaConf.load("../configs/data/ubira.yaml")
+    print(conf)
+    config = conf
     dataset = UBIRADataset(config)
     print("Data Length", len(dataset), "\n")
-    print([dataset[i]["id"] for i in range(len(dataset))])
-    print(dataset[86])
+    # print([dataset[i]["id"] for i in range(len(dataset))])
+    # print(dataset[86])

@@ -48,8 +48,8 @@ def get_representations(inputs: Union[list, torch.tensor],
 
 
 def get_model_representations(inputs: Union[List[str], List[dict], torch.tensor],
-                              layer: int = -1,
                               model: Callable,
+                              layer: int = -1,
                               tokenizer: Callable = None) -> np.array:
     model.eval()
     hiddens = []
@@ -59,7 +59,7 @@ def get_model_representations(inputs: Union[List[str], List[dict], torch.tensor]
 
     with torch.no_grad():
         for i in tqdm(range(len(inputs))):
-            outputs, hidden = model(**inputs[i], output_hidden_state=(layer != -1))
+            outputs = model(**inputs[i], output_hidden_states=(layer != -1))
             if layer != -1:
                 hidden_states = outputs.hidden_states[layer].cpu().numpy()
             else:

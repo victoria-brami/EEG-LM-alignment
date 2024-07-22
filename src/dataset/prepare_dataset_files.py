@@ -73,7 +73,7 @@ def get_unique_and_single_sentences_from_session(datapath: str, session_folder: 
     duplicate_sent_df.to_csv(os.path.join(src_path, "all_duplicate_sentences.csv"), index=False)
 
 
-def label_all_sentences_from_sessions(datapath: str):
+def label_all_sentences_from_sessions(datapath: str, use_duplicates: bool=False):
     list_folders = [os.path.join(datapath, fold) for fold in os.listdir(datapath)
                     if os.path.isdir(os.path.join(datapath, fold))]
     lfold = sorted([fold for fold in os.listdir(datapath) if os.path.isdir(os.path.join(datapath, fold))])
@@ -86,29 +86,40 @@ def label_all_sentences_from_sessions(datapath: str):
 
     sentences_indices = pd.DataFrame(columns=["common_id", "sent_content", *lfold, *fif_fold])
 
-    for i, sent in enumerate(sent_occurences.keys()):
+    for i, (sent, occs) in enumerate(sent_occurences.items()):
+        if use_duplicates and occs == len(list_folders):
+            continue
         # Initialize the row to append to the csv
         row = [f"common_sent_{i}", sent, *[""] * len(lfold), *[""] * len(fif_fold)]
         # Get the sessions in which the sentence appears
         sent_rows = sent_df[sent_df["sent_content"] == sent]
+        print(f"In sentence {i}: {occs} occurences")
         for session in sent_rows["session_id"].values:
             sess_id = int(session.split("_")[-1])
             row[sess_id + 2] = sent_rows[sent_rows["session_id"] == session]["sent_ident"].values[0]
             row[sess_id + 2 + len(lfold)] = sent_rows[sent_rows["session_id"] == session]["fif_file"].values[0]
         sentences_indices.loc[len(sentences_indices)] = row
 
-    sentences_indices.to_csv(os.path.join(datapath, "sentences_indices.csv"), index=False)
+    if use_duplicates:
+        sentences_indices.to_csv(os.path.join(datapath, "duplicate_sentences_indices.csv"), index=False)
+    else:
+        sentences_indices.to_csv(os.path.join(datapath, "sentences_indices.csv"), index=False)
 
 
-def create_sentence_level_files(datapath: str):
+
+
+def create_sentence_level_files(datapath: str, process_duplicates: bool=False):
 
     def retrieve_session_id_from_name(filename: str):
         return filename.split("_")[1]
 
     # def retrieve_fif_file_from_sent_id(sent_name_id: str):
         # sess_0_newsgroup-groups.google.com_hiddennook_f50294175d32a8ac_ENG_20041120_152800.txt_sent_40
-
-    all_sentence_labels = pd.read_csv(os.path.join(datapath, "sentences_indices.csv"))
+    if process_duplicates:
+        all_sentence_labels = pd.read_csv(os.path.join(datapath, "duplicate_sentences_indices.csv"))
+        all_sentence_labels.fillna("", inplace=True)
+    else:
+        all_sentence_labels = pd.read_csv(os.path.join(datapath, "sentences_indices.csv"))
     #
     # list_folders = [os.path.join(datapath, fold) for fold in os.listdir(datapath)
     #                 if os.path.isdir(os.path.join(datapath, fold))]
@@ -116,33 +127,35 @@ def create_sentence_level_files(datapath: str):
     session_cols = sorted([fold for fold in all_sentence_labels.columns
                            if fold.startswith("session") and not fold.endswith("_fif_name")])
     session_fif_cols = sorted([fold for fold in all_sentence_labels.columns
-                               if fold.startswith("session") and  fold.endswith("_fif_name")])
+                               if fold.startswith("session") and fold.endswith("_fif_name")])
 
     for i, row in tqdm(all_sentence_labels.iterrows()):
         sent_common_id = row["common_id"]
-        if i < 109:
-            continue
-        print("sentence ", i)
+        # if i < 109:
+        #     continue
+        print("\nSentence ", row[0])
         for sess_name, fif_id in zip(session_cols, session_fif_cols):
             if sess_name != "" or len(sess_name) > 0:
                 session_folder = f"session_{retrieve_session_id_from_name(sess_name)}"
+                if row[fif_id] != "nan" and row[fif_id] != "":
 
-                # Create the sentence folder if it does not exist
-                dest_folder = os.path.join(datapath, session_folder, sent_common_id)
-                os.makedirs(dest_folder, exist_ok=True)
+                    # Create the sentence folder if it does not exist
+                    dest_folder = os.path.join(datapath, session_folder, sent_common_id)
+                    os.makedirs(dest_folder, exist_ok=True)
 
-                # Retrieve the data in the right fif file and extract the sentence-wise data
-                fif_name = os.path.join(datapath, session_folder, row[fif_id])
-                epochs = mne.read_epochs(fif_name, preload=True, verbose=50)
-                eeg_data = epochs.get_data()
+                    # Retrieve the data in the right fif file and extract the sentence-wise data
+                    # print(f"Row contains {row[fif_id]}")
+                    fif_name = os.path.join(datapath, session_folder, row[fif_id])
+                    epochs = mne.read_epochs(fif_name, preload=True, verbose=50)
+                    eeg_data = epochs.get_data()
 
-                epochs.metadata.index = range(len(epochs.metadata))
-                labels_df = epochs.metadata[epochs.metadata["sent_ident"] == row[sess_name]]
-                word_in_sent_ids = labels_df.index.to_numpy()
-                
-                sent_eeg = eeg_data[word_in_sent_ids]
-                np.save(os.path.join(dest_folder, f"{sent_common_id}_eeg.npy"), sent_eeg)
-                labels_df.to_csv(os.path.join(dest_folder, f"{sent_common_id}_labels.csv"), index=False)
+                    epochs.metadata.index = range(len(epochs.metadata))
+                    labels_df = epochs.metadata[epochs.metadata["sent_ident"] == row[sess_name]]
+                    word_in_sent_ids = labels_df.index.to_numpy()
+
+                    sent_eeg = eeg_data[word_in_sent_ids]
+                    np.save(os.path.join(dest_folder, f"{sent_common_id}_eeg.npy"), sent_eeg)
+                    labels_df.to_csv(os.path.join(dest_folder, f"{sent_common_id}_labels.csv"), index=False)
 
 def process_data(datapath: str, session_folder: str, filename: str) -> None:
     """
@@ -175,7 +188,7 @@ if __name__ == '__main__':
     rootpath = "/home/viki/Documents/Erasmus/data_playground/eeg_POS"
     list_folders = ["session_0", "session_1", "session_2", "session_3", "session_4", "session_5"]
     session_filename = "rsvp_session1_files10-18-epo.fif"
-    # process_data(datapath=datapath, session_folder=folder, filename=filename)
+    # process_data(datapath=rootpath, session_folder=list_folders[0], filename=session_filename)
 
     # for sess_folder in tqdm(list_folders[2:], desc=f"Get all sentences from each session..."):
     #     # Create csv file containing all the sentences read within a single session
@@ -183,12 +196,12 @@ if __name__ == '__main__':
     #     # Filter and keep sentences appearing only ONCE within a single session
     #     get_unique_and_single_sentences_from_session(rootpath, sess_folder)
 
-    # # Get the Unique sentences and Create common sentence id across the different sessions
-    # # (will be easier later if we want to get the averaged eeg signals over the sessions )
-    # label_all_sentences_from_sessions(rootpath)
+    # Get the Unique sentences and Create common sentence id across the different sessions
+    # (will be easier later if we want to get the averaged eeg signals over the sessions )
+    # label_all_sentences_from_sessions(rootpath, use_duplicates=True)
 
     # Create the labels and signal files for each of those sessions (compute for all the sentences at first,
     # then isolate the duplicate sentences )
-    create_sentence_level_files(rootpath)
+    create_sentence_level_files(rootpath, process_duplicates=True)
 
 

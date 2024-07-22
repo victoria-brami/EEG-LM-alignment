@@ -33,6 +33,8 @@ def main(config):
 
     # Initialize the Correlations' table
     # Initialize Experiment table
+    if config.model.layer != -1:
+        config.tab_name = config.tab_name.replace(config.model.name, f"{config.model.name}_layer_{config.model.layer}")
     corr_save_folder = config.save_folder
     corr = CorrelationsTable(name=config.tab_name,
                              table_folder=corr_save_folder,
@@ -55,7 +57,7 @@ def main(config):
         l2_word_distances = None
 
     else:
-        word_features = get_model_representations(list_words, model, tokenizer)
+        word_features = get_model_representations(list_words, model, config.model.layer, tokenizer)
 
         print("\n\n\n\n", word_features.shape)
         if len(word_features.shape) == 3:

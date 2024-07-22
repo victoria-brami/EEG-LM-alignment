@@ -8,6 +8,6 @@ list_folders: ["session_0", "session_1", "session_2", "session_3", "session_4", 
 truncate: False
 mode: word
 bands: None
-n_sentences: 10
+n_sentences: 2199
 use_power: True
-labels: ["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]
+labels: ["NOUN"] #["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]
