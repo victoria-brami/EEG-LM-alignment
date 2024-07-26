@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 tests/
 results/
+src/outputs/
+outputs
