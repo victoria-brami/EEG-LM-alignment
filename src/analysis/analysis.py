@@ -4,7 +4,7 @@ from typing import Union, List, Callable, Tuple
 import torch
 from tqdm import tqdm
 from scipy.stats import pearsonr, spearmanr
-#from transformers import PreTrainedModel, PreTrainedTokenizer
+from transformers import AutoTokenizer, AutoModel
 from src.utils.utils import normalize_data
 from sklearn.cluster import KMeans
 from pyxdameraulevenshtein import (
@@ -13,6 +13,11 @@ from pyxdameraulevenshtein import (
 )
 from sklearn.metrics.pairwise import cosine_similarity
 from itertools import combinations
+
+def get_model(model_name: str):
+    model = AutoModel.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    return model, tokenizer
 
 
 def extract_same_time_window_rows(window_start: int,

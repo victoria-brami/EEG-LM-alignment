@@ -53,3 +53,8 @@ Here is an example of the different plots generated
 Stéphane Dufau, Jonathan Grainger, Katherine J. Midgley, and Phillip J. Holcomb. 
 A thousand words are worth a picture: snapshots of printed-word processing in an event-related potential megastudy. 
 Psychological Science, 26(12):1887–1897, 2015.
+
+<a id="https://aclanthology.org/2022.acl-long.156">[2]</a> 
+Alex Murphy, Bernd Bohnet, Ryan McDonald, and Uta Noppeney. 2022. 
+Decoding Part-of-Speech from Human EEG Signals. 
+In Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 2201–2210, Dublin, Ireland. Association for Computational Linguistics.

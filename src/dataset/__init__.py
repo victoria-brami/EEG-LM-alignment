@@ -1,1 +1,1 @@
-from .eeg_dataset import get_dataset
+from .eeg_dataset import get_dataset, get_dataset_electrodes

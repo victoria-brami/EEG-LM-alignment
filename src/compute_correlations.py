@@ -2,21 +2,18 @@ import os
 import hydra
 import torch
 import numpy as np
-from transformers import AutoTokenizer, AutoModel
 from src.dataset import get_dataset
 from src.analysis import (
     all_pairs,
     get_model_representations,
     compute_all_representations_distances,
     compute_all_dl_distance,
-    compute_correlations
+    compute_correlations,
+    get_model
 )
 from src.evaluation import CorrelationsTable
 
-def get_model(model_name: str):
-    model = AutoModel.from_pretrained(model_name)
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    return model, tokenizer
+
 
 @hydra.main(config_path='../configs', config_name='correlations')
 def main(config):
@@ -33,9 +30,11 @@ def main(config):
 
     # Initialize the Correlations' table
     # Initialize Experiment table
+    print("LAYER ID is now :", config.model.layer, config.model.name)
     if config.model.layer != -1:
-        config.tab_name = config.tab_name.replace(config.model.name, f"{config.model.name}_layer_{config.model.layer}")
+        config.tab_name = config.tab_name.replace(config.model.shortname, f"{config.model.shortname}_layer_{config.model.layer}")
     corr_save_folder = config.save_folder
+    print("Tab name is now :", config.tab_name)
     corr = CorrelationsTable(name=config.tab_name,
                              table_folder=corr_save_folder,
                              table_columns=config.tab_attrs)

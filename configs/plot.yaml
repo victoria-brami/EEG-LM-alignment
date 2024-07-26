@@ -3,6 +3,7 @@ root: /home/viki/Documents/Erasmus/EEG-LM-alignment
 defaults:
   - data: ubira
   - model: bert
+  - vis: matplotlib
   - _self_
 
 destpath: ./results/${path.datasets}
@@ -12,11 +13,7 @@ path:
 
 # DataFrame with Pearson/Spearman correlations
 save_folder: ${root}/results #/${path.datasets}
-tab_name: correlations_${.data.n_sentences}_sent.csv
+tab_name: correlations_${.data.labels[0]}_${.data.n_sentences}_sent.csv
 tab_attrs: ['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman']
 
-
-# Correlations RUN configuration
-word_distance: levenshtein
-pad_step: 10
-timesteps: 31
+distance: cosine # (l2, levenshtein-l2, levenshtein-cosine)

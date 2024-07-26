@@ -61,6 +61,18 @@ def _compute_eeg_power_signal(sent_eeg: np.array):
     return np.abs(hilbert(sent_eeg) * np.conjugate(hilbert(sent_eeg)))
 
 
+def get_dataset_electrodes(rootpath: str, dataname: str) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    """
+
+    :param rootpath: Path to the datasets
+    :param dataname: name of the dataset (also the name of the folder)
+    :return:
+    """
+    channels = pd.read_csv(os.path.join(rootpath, dataname, "locs3d.csv"))
+    return channels
+
+
+
 class UBIRADataset(BaseDataset):
 
     def __init__(self, cfg, tokenizer=None):

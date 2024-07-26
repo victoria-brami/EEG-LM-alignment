@@ -1,3 +1,4 @@
+rootpath: /home/viki/Documents/Erasmus/data_playground
 
 path:
   datasets: /home/viki/Documents/Erasmus/data_playground
@@ -8,6 +9,6 @@ list_folders: ["session_0", "session_1", "session_2", "session_3", "session_4", 
 truncate: False
 mode: word
 bands: None
-n_sentences: 2199
+n_sentences: 200
 use_power: True
-labels: ["NOUN"] #["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]
+labels: ["ADV"] #["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]
