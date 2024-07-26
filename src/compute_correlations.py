@@ -57,6 +57,7 @@ def main(config):
         l2_word_distances = None
 
     else:
+        config.model.layer = int(config.model.layer)
         word_features = get_model_representations(list_words, model, config.model.layer, tokenizer)
 
         print("\n\n\n\n", word_features.shape)

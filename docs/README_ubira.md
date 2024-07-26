@@ -1,21 +1,3 @@
-
-
-Number of Unique sentences : 4 479 (complete for at least 3 sessions)
-
-Dataset class:
-load a session
-in Getitem:
-- eeg_input_ids
-- Pos
-- prev_pos
-- next_pos
-- word
-- sentence id
-- sentence content
-
-
-Plot the dataset label cintents on unique PoS
-    
 #   EEG Dataset for RSVP-reading a subset of English-Web-Treebank corpus
 #### Alex Murphy <AXM1390@student.bham.ac.uk>
 

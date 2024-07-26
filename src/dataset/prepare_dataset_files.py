@@ -10,7 +10,7 @@ from collections import Counter
 def get_sentences_from_session(datapath: str, session_folder: str) -> None:
     """
 
-    :param datapath: Path to the folder containing the data
+    :param datapath: Path to the folder containing the dataset UBIRA
     :param session_folder: folder containing the recordings related to a single session (6 in total for UBIRA)
     :return: gets the sentences read during the session (only on word-level in input) and stores them in a csv file
             in the same session_folder
@@ -41,9 +41,11 @@ def get_unique_and_single_sentences_from_session(datapath: str, session_folder: 
 
     :param datapath: Path to the folder containing the data
     :param session_folder: folder containing the recordings related to a single session (6 in total for UBIRA)
-    :return:
+    :return: creates for the given session:
+        - a csv file containing the sentences read ONLY ONCE called all_unique_sentences.csv
+        - a csv file containing the sentences read ONLY ONCE called all_duplicate_sentences.csv
     """
-    # Load the csv file containing all the sentences (computed with previous function)
+    # Load the csv file containing all the sentences (computed with previous function get_sentences_from_session)
     src_path = os.path.join(datapath, session_folder)
     sentence_df = pd.read_csv(os.path.join(src_path, "all_sentences.csv"))
     list_sentences = sentence_df["sent_content"].values
@@ -157,7 +159,7 @@ def create_sentence_level_files(datapath: str, process_duplicates: bool=False):
                     np.save(os.path.join(dest_folder, f"{sent_common_id}_eeg.npy"), sent_eeg)
                     labels_df.to_csv(os.path.join(dest_folder, f"{sent_common_id}_labels.csv"), index=False)
 
-def process_data(datapath: str, session_folder: str, filename: str) -> None:
+def convert_data_from_fif_to_npy_and_csv(datapath: str, session_folder: str, filename: str) -> None:
     """
 
     :param datapath:
@@ -188,7 +190,7 @@ if __name__ == '__main__':
     rootpath = "/home/viki/Documents/Erasmus/data_playground/eeg_POS"
     list_folders = ["session_0", "session_1", "session_2", "session_3", "session_4", "session_5"]
     session_filename = "rsvp_session1_files10-18-epo.fif"
-    # process_data(datapath=rootpath, session_folder=list_folders[0], filename=session_filename)
+    # convert_data_from_fif_to_npy_and_csv(datapath=rootpath, session_folder=list_folders[0], filename=session_filename)
 
     # for sess_folder in tqdm(list_folders[2:], desc=f"Get all sentences from each session..."):
     #     # Create csv file containing all the sentences read within a single session

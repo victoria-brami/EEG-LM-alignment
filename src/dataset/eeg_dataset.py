@@ -86,15 +86,15 @@ class UBIRADataset(BaseDataset):
         self.channels = pd.read_csv(os.path.join(self.datapath, "locs3d.csv"))
 
     def _get_sentence_wise_data(self, sent_id: str, mode: str = "average", power: bool = True) -> List:
-        list_paths = glob(os.path.join(self.datapath, "*", f"{sent_id}", "*.npy"))
-        labels_path = list_paths[0].replace("eeg.npy", "labels.csv")
 
-        labels_df = pd.read_csv(labels_path)
-        labels_df = labels_df[["word", "pos", "filename", "freq", "len",
-                               "prev_pos", "next_pos", "prev_freq", "next_freq", "prev_len", "next_len"]]
-
-        # We average all the power
         if mode == "average":
+            list_paths = glob(os.path.join(self.datapath, "*", f"{sent_id}", "*.npy"))
+            labels_path = list_paths[0].replace("eeg.npy", "labels.csv")
+
+            labels_df = pd.read_csv(labels_path)
+            labels_df = labels_df[["word", "pos", "filename", "freq", "len",
+                                   "prev_pos", "next_pos", "prev_freq", "next_freq", "prev_len", "next_len"]]
+
             # Array of shape (n_sessions, n_words, n_channels, n_timesteps)
             eeg_sigs_arr = np.stack([np.load(path) for path in list_paths])
             n_words, channels, timesteps = eeg_sigs_arr[0].shape
@@ -103,7 +103,7 @@ class UBIRADataset(BaseDataset):
                 eeg_sig = np.mean(eeg_sigs_arr, axis=0)
 
             else:
-                # we want to compute the power so we reshape the signal
+                # we want to compute the power, so we reshape the signal
                 eeg_sigs_arr = eeg_sigs_arr.transpose(0, 2, 1, 3)
                 # Reshape the array to (n_sessions,  n_channels, n_words * n_timesteps)
                 eeg_sigs_arr = eeg_sigs_arr.reshape(-1, channels, n_words * timesteps)
@@ -111,6 +111,35 @@ class UBIRADataset(BaseDataset):
                 eeg_pows_arr = _compute_eeg_power_signal(eeg_sigs_arr)
                 eeg_pows_arr = eeg_pows_arr.reshape(-1, channels, n_words, timesteps).transpose(0, 2, 1, 3)
                 eeg_sig = np.mean(eeg_pows_arr, axis=0)
+            return sent_id, eeg_sig, labels_df
+
+        else:
+            # We only consider a single session so mode must be in ["session_{i}"]
+
+            path = glob(os.path.join(self.datapath, mode, f"{sent_id}", "*.npy"))
+            assert len(path) == 1
+            labels_path = path.replace("eeg.npy", "labels.csv")
+
+            labels_df = pd.read_csv(labels_path)
+            labels_df = labels_df[["word", "pos", "filename", "freq", "len",
+                                   "prev_pos", "next_pos", "prev_freq", "next_freq", "prev_len", "next_len"]]
+
+            # Array of shape (n_words, n_channels, n_timesteps)
+            eeg_sigs_arr = np.load(path)
+            n_words, channels, timesteps = eeg_sigs_arr.shape
+
+            if not power:
+                eeg_sig = eeg_sigs_arr
+
+            else:
+                # we want to compute the power, so we reshape the signal
+                eeg_sigs_arr = eeg_sigs_arr.transpose(1, 0, 2)
+                # Reshape the array to (n_channels, n_words * n_timesteps)
+                eeg_sigs_arr = eeg_sigs_arr.reshape(-1, n_words * timesteps)
+                # Apply the Power computation for each trial
+                eeg_pows_arr = _compute_eeg_power_signal(eeg_sigs_arr)
+                eeg_pows_arr = eeg_pows_arr.reshape(-1, n_words, timesteps).transpose(1, 0, 2)
+                eeg_sig = eeg_pows_arr
             return sent_id, eeg_sig, labels_df
 
     def _load_data(self, mode: str = "word", use_power: bool = True):
@@ -141,6 +170,7 @@ class UBIRADataset(BaseDataset):
 
             elif mode == "sentence":
                 continue
+
     def _get_dataset_words(self):
         list_words = []
         for i in range(len(self.data)):
@@ -203,6 +233,7 @@ class KilowordDataset(BaseDataset):
                 "word": word
             }
             self.data.append(sample)
+
 
 def get_dataset(config: Union[Dict, OmegaConf],
                 tokenizer: AutoTokenizer,
