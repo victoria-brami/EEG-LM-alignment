@@ -12,7 +12,7 @@ from src.utils import (
     split_into_chunks
 )
 from src.evaluation import CorrelationsTable
-
+from src.vis import build_destination_folder
 
 def vis_parser():
     parser = argparse.ArgumentParser()

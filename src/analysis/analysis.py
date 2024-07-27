@@ -112,7 +112,7 @@ def compute_all_representations_distances(features,
                                           norm="l2",
                                           normalize=True):
     distances = []
-    for (id1) in tqdm(np.unique(list_paired_indices[:, 0])):
+    for (id1) in np.unique(list_paired_indices[:, 0]):
         id2 = list_paired_indices[np.where(np.array(list_paired_indices)[:, 0] == id1)[0], 1]
         if norm == "cosine":
             dist = cosine_similarity(features[id1][None, :], features[id2])[0]

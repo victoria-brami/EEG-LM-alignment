@@ -71,6 +71,14 @@ def get_dataset_electrodes(rootpath: str, dataname: str) -> Union[pd.DataFrame, 
     channels = pd.read_csv(os.path.join(rootpath, dataname, "locs3d.csv"))
     return channels
 
+def project_3d_coordinates_in_plan(coords: np.array,) -> np.array:
+    COEF = 0.4
+    max_z = np.max(coords[:, 2])
+    print(max_z)
+    coords[:, 0] /= (1 - COEF *((max_z - coords[:, 2]) / max_z))
+    coords[:, 1] /= (1 - COEF * ((max_z - coords[:, 2]) / max_z))
+    return coords
+
 
 
 class UBIRADataset(BaseDataset):

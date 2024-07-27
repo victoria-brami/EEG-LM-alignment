@@ -39,6 +39,7 @@ class CorrelationsTable(BaseTable):
     def extract_sub_table(self, attribute: str,
                           value: Union[str, float],
                           groupby_key: Union[str, list]=None):
+
         if attribute not in self.table.columns:
             raise KeyError(f"Key {attribute} is missing in the table")
         sub_table = self.table[self.table[attribute] == value]
