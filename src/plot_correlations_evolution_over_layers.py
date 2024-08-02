@@ -79,15 +79,15 @@ def main(config):
 
     # Plot correlations topographies
 
-    pears_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, config.data.shortname,
+    pears_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, config.data.dataname,
                                                     config.save_folder, config.distance, "pearson")
-    spear_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, config.data.shortname,
+    spear_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, config.data.dataname,
                                                     config.save_folder, config.distance, "spearman")
 
     n_rows, n_cols = len(sub_titles), len(sub_titles[0])
     # print(n_rows, n_cols, len(sub_titles), len(pears_corr_values[0][0]))
 
-    for subtitle_id in tqdm(range(len(fig_sub_titles))):
+    for subtitle_id in tqdm(range(len(fig_sub_titles)), desc="Generating Correlation plots"):
         # Reshape the plots
         pears_corr_val = split_into_chunks(pears_corr_values[subtitle_id], config.vis.chunk_size)
         spear_corr_val = split_into_chunks(spear_corr_values[subtitle_id], config.vis.chunk_size)
@@ -97,14 +97,18 @@ def main(config):
                         rows=n_rows, size=config.vis.size, cols=n_cols, edgecolor=config.vis.edgecolor,
                         subfig_name=sub_titles,
                         coords_name=list_electrodes, dpi=config.vis.dpi, title=fig_sub_titles[subtitle_id],
-                        savepath=pears_dest_file_path + f"/pearson_{modelname}_{fig_sub_titles[subtitle_id]}.png")
+                        savepath=pears_dest_file_path + f"/pearson_{modelname}"
+                                                        f"_{config.label_name}"
+                                                        f"_{fig_sub_titles[subtitle_id]}.png")
 
         plot_2d_topomap(electrodes_pos[:, :2], spear_corr_val, dataname=config.data.dataname,
                         grid_res=config.vis.grid_res,
                         rows=n_rows, size=config.vis.size, cols=n_cols, edgecolor=config.vis.edgecolor,
                         subfig_name=sub_titles,
                         coords_name=list_electrodes, dpi=config.vis.dpi, title=fig_sub_titles[subtitle_id],
-                        savepath=spear_dest_file_path + f"/spearman_{modelname}_{fig_sub_titles[subtitle_id]}.png")
+                        savepath=spear_dest_file_path + f"/spearman_{modelname}"
+                                                        f"_{config.label_name}"
+                                                        f"_{fig_sub_titles[subtitle_id]}.png")
     print("\033[96m JOB Done ! \033[0m")
 
 

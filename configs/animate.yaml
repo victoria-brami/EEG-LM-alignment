@@ -13,9 +13,10 @@ path:
 
 # DataFrame with Pearson/Spearman correlations
 save_folder: ${root}/results #/${path.datasets}
+label_name: ${.data.labels[0]}_${.data.n_sentences}_sent
 tab_name: correlations_${.data.labels[0]}_${.data.n_sentences}_sent.csv
 tab_attrs: ['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman']
 
 
 distance: cosine # (l2, levenshtein-l2, levenshtein-cosine)
-corr: pearson # pearson # spearman
+corr: spearman # pearson # spearman

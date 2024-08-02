@@ -11,10 +11,10 @@ def main(cfg: DictConfig) -> None:
     logger = getLogger(__name__)
 
     # Create the save path
-    save_path = os.path.join(cfg.destpath, "image", cfg.corr, cfg.distance)
+    save_path = os.path.join(cfg.destpath, cfg.data.dataname, "image", cfg.corr, cfg.distance)
     os.makedirs(save_path, exist_ok=True)
 
-    output_path = create_valid_gif(save_path, cfg.model.shortname, over_layers=True)
+    output_path = create_valid_gif(save_path, cfg.label_name, cfg.model.shortname, over_layers=True)
     logger.info(f"Animation saved to {output_path} ")
 
 

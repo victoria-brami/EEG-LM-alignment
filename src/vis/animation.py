@@ -3,9 +3,10 @@ import cv2
 
 
 # Video Generating function
-def create_valid_gif(save_path: str, model_name: str = "bert", over_layers: bool = True) -> str:
+def create_valid_gif(save_path: str, model_name: str = "bert", labels: str = "", over_layers: bool = True) -> str:
     image_folder = save_path  # make sure to use your folder
-    video_name = image_folder + f'/{model_name}_topo_over_layers.avi' if over_layers else image_folder + f'/{model_name}_topography.avi'
+    video_name = image_folder + f'/{model_name}_{labels}_topo_over_layers.avi' if over_layers \
+        else image_folder + f'/{model_name}_topography.avi'
 
     os.chdir(save_path)
 

@@ -122,7 +122,8 @@ def _prepare_ubira_topomap(electrodes, head_radius=0.2, cols=None, rows=None, si
                                facecolor="none", **fig_kwargs)
                 col = "white" if axs is None else "none"
                 ellipse = Ellipse(electrodes[23], height=head_radius, width=head_radius, facecolor=col, **fig_kwargs)
-                ax[i, j].add_patch(nose)
+                if axs is None:
+                    ax[i, j].add_patch(nose)
                 ax[i, j].add_patch(left_ear)
                 ax[i, j].add_patch(right_ear)
                 ax[i, j].add_patch(ellipse)
