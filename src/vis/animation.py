@@ -3,7 +3,7 @@ import cv2
 
 
 # Video Generating function
-def create_valid_gif(save_path, model_name="bert", over_layers=True):
+def create_valid_gif(save_path: str, model_name: str = "bert", over_layers: bool = True) -> str:
     image_folder = save_path  # make sure to use your folder
     video_name = image_folder + f'/{model_name}_topo_over_layers.avi' if over_layers else image_folder + f'/{model_name}_topography.avi'
 
@@ -54,3 +54,4 @@ def create_valid_gif(save_path, model_name="bert", over_layers=True):
     # Deallocating memories taken for window creation
     cv2.destroyAllWindows()
     video.release()  # releasing the video generated
+    return video_name

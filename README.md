@@ -17,6 +17,8 @@ Then installing the packages:
 
 ## Computing correlations between words representations and brain signals
 
+** [02/08/2024] FOR A MORE RECENT UPDATE OF THE REPO USAGE, CHECK the `docs/` FOLDER **
+
 To compute the Pearson and Spearman correlations between the EEG signals and the pairwise bert distances:
 ```
     python3.10 -m kiloword.get_correlations --word_dist_repr bert --eeg_path <path_to_eeg_recordings> --timesteps 30 --labels_path <path_to_kiloword_labels> --save_folder <folder_name> --tab_name <csv_correlations_name>

@@ -6,7 +6,7 @@ defaults:
   - vis: matplotlib
   - _self_
 
-destpath: ./results/${path.datasets}
+destpath: /home/viki/Documents/Erasmus/EEG-LM-alignment/results/ #${.data.dataname} #/${path.datasets}
 
 path:
   datasets: /home/viki/Documents/Erasmus/data_playground
@@ -16,4 +16,6 @@ save_folder: ${root}/results #/${path.datasets}
 tab_name: correlations_${.data.labels[0]}_${.data.n_sentences}_sent.csv
 tab_attrs: ['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman']
 
-distance: l2 # cosine (l2, levenshtein-l2, levenshtein-cosine)
+
+distance: cosine # (l2, levenshtein-l2, levenshtein-cosine)
+corr: pearson # pearson # spearman

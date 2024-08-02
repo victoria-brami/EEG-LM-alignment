@@ -7,5 +7,7 @@ size: 4
 n_rows:
 n_cols:
 edgecolor: navy
+edgecolors: navy
+linewidths: 0.5
 dpi: 200
 grid_res: 100

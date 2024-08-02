@@ -1,6 +1,7 @@
 import os
 
 def build_destination_folder(table_path: str = "",
+                             dataset_name: str = "",
                              save_folder: str = "",
                              distance_type: str = "l2",
                              corr_type: str = "spearman"):
@@ -8,6 +9,12 @@ def build_destination_folder(table_path: str = "",
     topo_name = os.path.basename(table_path).replace("csv", "png")
     if distance_type != "l2":
         topo_name = topo_name.replace(".png", f"_{distance_type}.png")
+
+    if dataset_name not in save_folder:
+        save_folder = os.path.join(save_folder, dataset_name)
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
     if not os.path.exists(os.path.join(save_folder, "image")):
         os.mkdir(os.path.join(save_folder, "image"))
 

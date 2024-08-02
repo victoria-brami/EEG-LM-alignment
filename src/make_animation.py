@@ -1,24 +1,22 @@
 import os
-from argparse import ArgumentParser
+import hydra
+from omegaconf import DictConfig
+from logging import getLogger
 from src.vis import create_valid_gif
 
 
+@hydra.main(config_path="../configs", config_name="animate")
+def main(cfg: DictConfig) -> None:
+
+    logger = getLogger(__name__)
+
+    # Create the save path
+    save_path = os.path.join(cfg.destpath, "image", cfg.corr, cfg.distance)
+    os.makedirs(save_path, exist_ok=True)
+
+    output_path = create_valid_gif(save_path, cfg.model.shortname, over_layers=True)
+    logger.info(f"Animation saved to {output_path} ")
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument("--label_name", default="OBJECT")
-    parser.add_argument("--distance", default="cosine")
-    parser.add_argument("--corr", default="pearson")
-    parser.add_argument("--model", default="canine_s")
-    parser.add_argument("--over_layers", default=True)
-    args = parser.parse_args()
-
-    LABELS = ["MONEY", "MUSIC", "NATURE", "QUANTITY",  "DEATH", "HOUSE", "MOVE", "RELIGION","INDUSTRY", "TIME"]
-
-    for label in LABELS[3:]:
-        args.label_name = label
-        save_path = os.path.join("/home/viki/Downloads/kiloword_correlations",
-                                 args.label_name, "image", args.corr, args.distance)
-
-        create_valid_gif(save_path,  args.model, over_layers=args.over_layers)
+    main()
