@@ -29,7 +29,7 @@ def arg_parser():
     parser.add_argument("--focus_label", type=str, default=None,  # choices=LIST_LABELS,
                         help="compute correlations of a specific semantic field")
     parser.add_argument("--save_folder", type=str,
-                        default="/home/viki/Downloads/kiloword_correlations",
+                        default="/home/viki/Downloads/kiloword",
                         help="folder where the experiments are saved")
     parser.add_argument("--tab_name", type=str, default="correlations.csv",
                         help="Name of the document where the experiments are saved")
@@ -79,7 +79,10 @@ def main(args):
     else:
         args.tab_name = "_".join(["ALL", args.tab_name])
 
-    args.tab_name = "_".join([args.word_dist_repr, args.tab_name])
+    rep_name = args.word_dist_repr
+    if rep_name == "bert":
+        rep_name = "bert_layer_12"
+    args.tab_name = "_".join([rep_name, str(args.timesteps)+"ms", args.tab_name])
     # Get the list of words and their pairs
     list_words = labels["WORD"].values[all_ids]
     list_paired_words = all_pairs(list_words)
@@ -166,7 +169,7 @@ def main(args):
 
             word_features = get_model_representations(list_words, model, tokenizer)
 
-        print("\n\n\n\n", word_features.shape)
+        print("Number of words ", word_features.shape[0], word_features.shape)
         if len(word_features.shape) == 3:
             word_features = word_features.squeeze(1)
         cosine_word_distances = compute_all_representations_distances(word_features,

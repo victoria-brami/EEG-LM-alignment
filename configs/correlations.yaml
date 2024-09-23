@@ -12,7 +12,7 @@ path:
 
 # DataFrame with Pearson/Spearman correlations
 save_folder: ${root}/results #/${path.datasets}
-tab_name: correlations_${.data.n_sentences}_sent.csv
+tab_name: correlations_${.data.labels[0]}_${.data.n_sentences}_sent.csv
 tab_attrs: ['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman']
 
 

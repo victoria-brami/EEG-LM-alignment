@@ -6,17 +6,19 @@ defaults:
   - vis: matplotlib
   - _self_
 
-destpath: /home/viki/Documents/Erasmus/EEG-LM-alignment/results/ #${.data.dataname} #/${path.datasets}
+destpath: /home/viki/Documents/Erasmus/EEG-LM-alignment/results/${.data.dataname} #/${path.datasets}
 
 path:
   datasets: /home/viki/Documents/Erasmus/data_playground
 
+distance: cosine # (l2, levenshtein-l2, levenshtein-cosine)
+corr: spearman # pearson # spearman
+timesteps: 21
+
 # DataFrame with Pearson/Spearman correlations
 save_folder: ${root}/results #/${path.datasets}
-label_name: ${.data.labels[0]}_${.data.n_sentences}_sent
-tab_name: correlations_${.data.labels[0]}_${.data.n_sentences}_sent.csv
+label_name: ${.data.labels[0]} #_${.data.n_sentences}_sent
+tab_name: correlations_${.data.labels[0]} #_${.data.n_sentences}_sent.csv
 tab_attrs: ['Channel', 'distance', 'truncate_start', 'truncate_end', 'pearson', 'spearman']
 
 
-distance: cosine # (l2, levenshtein-l2, levenshtein-cosine)
-corr: spearman # pearson # spearman

@@ -3,12 +3,12 @@ rootpath: /home/viki/Documents/Erasmus/data_playground
 path:
   datasets: /home/viki/Documents/Erasmus/data_playground
 
-dataname: ubira
-datapath: ${.path.datasets}/eeg_POS
-list_folders: ["session_0", "session_1", "session_2", "session_3", "session_4", "session_5"]
+dataname:
+datapath: ${.path.datasets}/HarryPotterMEG
+sampling_rate: 200 # or 1000
+list_folders: ["25ms/A", "25ms/B", "25ms/C", "25ms/D", "25ms/E", "25ms/G", "25ms/H", "25ms/I"]
 truncate: False
 mode: word
 bands: None
-n_sentences: 200
 use_power: True
 labels: ["ADJ"] #["PROPN", "VERB", "ADV", "NOUN", "ADJ", "ADP", "AUX", "DET", "PRON"]

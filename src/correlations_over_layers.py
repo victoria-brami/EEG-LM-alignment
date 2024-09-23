@@ -17,8 +17,9 @@ from src.vis import build_destination_folder
 def vis_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_folder", type=str,
-                        default="/home/viki/Downloads/kiloword_correlations",
+                        default="/home/viki/Downloads/kiloword",
                         help="folder where the experiments are saved")
+    parser.add_argument("--dataset_name", type=str, default="kiloword")
     parser.add_argument("--dataset_path", type=str,
                         default="/home/viki/mne_data/MNE-kiloword-data",
                         help="Path to where all the info of the dataset is stored")
@@ -33,6 +34,8 @@ def vis_parser():
                         default="OBJECT",
                         help="Name of the Label used")
     parser.add_argument("--chunk_size", type=int, default=8)
+    parser.add_argument("--timesteps", type=int, default=31,
+                        help="duration of the eeg signals extracted")
     parser.add_argument("-d", "--distance", type=str,
                         default="l2",
                         choices=["cosine", "l2", "levenshtein-l2", "levenshtein-cosine"],
@@ -66,8 +69,9 @@ def main(args):
     print(model)
 
     list_corr_names = [filename for filename in os.listdir(corr_save_folder)
-                       if model in filename and "random" not in filename and "layer" in filename]
+                       if model in filename and "random" not in filename and "layer" in filename and f"{args.timesteps}ms" in filename]
     print("names", len(list_corr_names))
+    print("names", "\n ".join(list_corr_names))
 
     # TODO: Sort the correlation tables in the right order
     # assert len(list_corr_names) > 1, "Cannot plot that kind of figure for this model"
@@ -110,8 +114,18 @@ def main(args):
 
     # Plot correlations topographies
 
-    pears_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, args.distance, "pearson")
-    spear_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path, args.distance, "spearman")
+    pears_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path,
+                                                    args.dataset_name,
+                                                    args.save_folder,
+                                                    args.distance,
+                                                    args.timesteps,
+                                                    "pearson")
+    spear_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path,
+                                                    args.dataset_name,
+                                                    args.save_folder,
+                                                    args.distance,
+                                                    args.timesteps,
+                                                    "spearman")
 
     # print("len Pearson", len(pears_corr_values), pears_corr_values)
 
@@ -125,13 +139,17 @@ def main(args):
 
         # print(len(pears_corr_val[-1]), len(spear_corr_val[-1]))
 
-        plot_2d_topomap(electrodes_pos, pears_corr_val, grid_res=100,
+        plot_2d_topomap(electrodes_pos, pears_corr_val,
+                        dataname=args.dataset_name,
+                        grid_res=1000,
                         rows=n_rows, size=4, cols=n_cols, edgecolor="navy",
                         subfig_name=sub_titles,
                         coords_name=list_electrodes, dpi=200, title=fig_sub_titles[subtitle_id],
                         savepath=pears_dest_file_path + f"/pearson_{model}_{fig_sub_titles[subtitle_id]}.png")
 
-        plot_2d_topomap(electrodes_pos, spear_corr_val, grid_res=100,
+        plot_2d_topomap(electrodes_pos, spear_corr_val,
+                        dataname=args.dataset_name,
+                        grid_res=100,
                         rows=n_rows, size=4, cols=n_cols, edgecolor="navy",
                         subfig_name=sub_titles,
                         coords_name=list_electrodes, dpi=200, title=fig_sub_titles[subtitle_id],
@@ -147,11 +165,13 @@ if __name__ == '__main__':
              "DEATH", "BODY",  "MEDICAL",  "NATURE", "QUANTITY", "MATERIAL"]
     LABELS = ["MUSIC", "NATURE", "QUANTITY", "RELIGION", "DEATH", "HOUSE", "MOVE", "INDUSTRY", "TIME"]
 
-    for list_elt in tqdm(LABELS[4:]):
-        print(f"\nComputing for label {list_elt} ...")
-        args = vis_parser()
-        args.model = "canine_s"
-        args.distance = "cosine"
-        args.chunk_size = 8
-        args.label_name = list_elt
-        main(args)
+    # for list_elt in tqdm(LABELS[4:]):
+    #     print(f"\nComputing for label {list_elt} ...")
+    #     args = vis_parser()
+    #     args.model = "canine_s"
+    #     args.distance = "cosine"
+    #     args.chunk_size = 8
+    #     args.label_name = list_elt
+    #     main(args)
+    args = vis_parser()
+    main(args)

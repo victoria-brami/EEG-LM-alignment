@@ -1,4 +1,5 @@
 import os
+import json
 from glob import glob
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
@@ -8,16 +9,31 @@ from scipy.signal import hilbert
 from omegaconf import OmegaConf
 from transformers import AutoTokenizer
 from src.dataset.base import BaseDataset
+from src.dataset.constants import BrainMEGElectrodes
 
 from src.utils import read_table, parse_table_labels
 
-LIST_LABELS = ["SEPARATION", "LOCATION", "ENTERTAINMENT", "MONEY", "NATURE", "QUANTITY",
+LIST_LABELS = ["SEPARATION", "LOCATION", "ENTERTAINMENT", "MONEY",
+               "NATURE", "QUANTITY",
                "POLITICS", "RELIGION", "HOUSE", "MOVE", "SPORT",
                "JUSTICE", "INDUSTRY", "LANGUAGE", "FOOD", "MODE",
                "DEVICE", "FAMILY", "MUSIC", "CRIME", "CATASTROPHE",
                "ARMY", "TIME", "SCHOOL", "CLEANNESS", "DEATH",
                "GLORY", "BODY", "PEOPLE", "MEDICAL", "MATERIAL",
                "GOVERN", "SCIENCE", "PHILOSOPHY", "FEELING"]
+
+
+BANDS = {
+    "theta1": [4, 6],
+    "theta2": [6.5, 8],
+    "alpha1": [8.5, 10],
+    "alpha2": [10.5, 13],
+    "beta1": [13.5, 18],
+    "beta2": [18.5, 30],
+    "gamma1": [30.5, 40],
+    "gamma2": [40.5, 49],
+
+}
 
 
 def _split_sent_data_into_words_data(start_id: int,
@@ -228,7 +244,7 @@ class KilowordDataset(BaseDataset):
             else:
                 all_ids = self.labels_df[self.labels_df[self.filter_labels] is True].index
         else:
-            self.all_ids = len(self.labels)
+            self.all_ids = np.arange(len(self.labels))
 
     def _get_dataset_words(self):
         return self.labels["WORD"].values[self.all_ids]
@@ -253,6 +269,57 @@ class KilowordDataset(BaseDataset):
                 "word": word
             }
             self.data.append(sample)
+
+
+class HarryPotterMEGDataset(BaseDataset):
+
+    def __init__(self, config, tokenizer=None):
+        super().__init__(config, tokenizer)
+        self.data = []
+        self._load_channels()
+        self._load_labels()
+        self.words_list = self._get_dataset_words()
+        self._load_data()
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+    def _load_labels(self):
+        # Load the alternative one if we use the label PRON+AUX
+        if "PRON+AUX" in self.config.label_name:
+            with open(os.path.join(self.datapath, "sentences_and_pos_extended.json"), "r") as json_file:
+                self.sent_data = json.load(json_file)
+        else:
+            with open(os.path.join(self.datapath, "sentences_and_pos.json"), "r") as json_file:
+                self.sent_data = json.load(json_file)
+        with open(os.path.join(self.datapath, "split_sentences_and_pos.json"), "r") as json_f:
+            self.split_sent_data = json.load(json_f)
+
+    def _load_channels(self):
+        """ Method to load the electrodes names and 3d Positions"""
+        import mne
+        chans = np.loadtxt(os.path.join(self.datapath, "loc306.txt"))
+        self.channel_names = [f"MEG{int(e):04}" for e in chans[:, 3]]
+        self.channels = np.load(os.path.join(self.datapath, "locs306.npy"))
+        self.info = mne.create_info(ch_names=self.channel_names,
+                                    ch_types=["grad", "grad", "mag"] * (len(self.channels) // 3),
+                                    sfreq=self.config.sampling_rate)
+        self.info._set_channel_positions(self.channels, self.channel_names, )
+
+    def _load_data(self):
+        """ Method to load the EEG data and its corresponding labels"""
+        raise NotImplementedError
+
+    def _get_dataset_words(self):
+        """ Method to get all the words paired to a given signal """
+        list_words = []
+        for i in range(len(self.data)):
+            list_words.append(self.data[i]["word"])
+        return list_words
 
 
 def get_dataset(config: Union[Dict, OmegaConf],

@@ -11,19 +11,43 @@ cd ../
 #                "SCHOOL" "CLEANNESS" "DEATH" "GLORY" "BODY" "PEOPLE" "MEDICAL" \
 #                "MATERIAL" "GOVERN"
 # "ENTERTAINMENT" "MONEY" "NATURE" "QUANTITY" "RELIGION" "HOUSE" "MOVE" "SPORT" "OBJECT" "ABSTRACT"
-for list_elt in "MONEY" "MUSIC" "NATURE" "QUANTITY" "RELIGION" "DEATH" "HOUSE" "MOVE" "INDUSTRY" "TIME"
-do
+#for list_elt in "MONEY" "MUSIC" "NATURE" "QUANTITY" "RELIGION" "DEATH" "HOUSE" "MOVE" "INDUSTRY" "TIME"
+#do
 #  for word_dist in "bert_layer_11" "bert_layer_10" "bert_layer_9" \
 #                    "bert_layer_8" "bert_layer_7" "bert_layer_6" \
 #                    "bert_layer_5" "bert_layer_4" "bert_layer_3" \
 #                    "bert_layer_2" "bert_layer_1"
-for word_dist in "bert"
-  do
+
+conda activate diffusion-lm
+# "RELIGION"
+export TIMESTEPS=21
+
+for list_elt in  "QUANTITY" #"RELIGION" "INDUSTRY""ABSTRACT"
+do
+for word_dist in "bert" "bert_layer_11" "bert_layer_10" "bert_layer_9" \
+                    "bert_layer_8" "bert_layer_7" "bert_layer_6" \
+                    "bert_layer_5" "bert_layer_4" "bert_layer_3" \
+                    "bert_layer_2" "bert_layer_1"
+
+do
     echo $word_dist
-    # python3.10 -m kiloword.get_correlations --word_dist_repr=$word_dist  --use_model_cache --focus_label=$list_elt
+    python3 -m src.get_correlations \
+                      --word_dist_repr=$word_dist  \
+                      --use_model_cache \
+                      --focus_label=$list_elt \
+                      --timesteps=$TIMESTEPS
+#                      --save_folder=""
+    #
     export tab=$word_dist\_$list_elt\_correlations.csv
-    python3.10 -m kiloword.correlations_over_layers --label_name=$list_elt --distance cosine --chunk_size 6 --model bert
-    python3.10 -m kiloword.correlations_over_layers --label_name=$list_elt --chunk_size 6 --model bert
-  done
+    echo ""
+#    echo "Reading from tab $tab "
+
+done
+    python3.10 -m src.correlations_over_layers  --distance="cosine" --chunk_size 6 --model="bert" --label_name=$list_elt --timesteps=$TIMESTEPS
+    python3.10 -m src.correlations_over_layers  --chunk_size 6 --model="bert" --label_name=$list_elt --timesteps=$TIMESTEPS
+    python3 -m src.make_animation data=kiloword save_folder="/home/viki/Downloads" distance="cosine" corr="pearson" timesteps=$TIMESTEPS label_name=$list_elt
+    python3 -m src.make_animation data=kiloword save_folder="/home/viki/Downloads" distance="l2" corr="pearson" timesteps=$TIMESTEPS label_name=$list_elt
+    python3 -m src.make_animation data=kiloword save_folder="/home/viki/Downloads" distance="cosine" corr="spearman" timesteps=$TIMESTEPS label_name=$list_elt
+    python3 -m src.make_animation data=kiloword save_folder="/home/viki/Downloads" distance="l2" corr="spearman" timesteps=$TIMESTEPS label_name=$list_elt
 done
 

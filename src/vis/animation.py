@@ -3,12 +3,20 @@ import cv2
 
 
 # Video Generating function
-def create_valid_gif(save_path: str, model_name: str = "bert", labels: str = "", over_layers: bool = True) -> str:
+def create_valid_gif(save_path: str, destpath: str,
+                     model_name: str = "bert",
+                     labels: str = "",
+                     timesteps: str = "",
+                     over_layers: bool = True) -> str:
     image_folder = save_path  # make sure to use your folder
-    video_name = image_folder + f'/{model_name}_{labels}_topo_over_layers.avi' if over_layers \
-        else image_folder + f'/{model_name}_topography.avi'
+    video_name = destpath + f'/{model_name}_{labels}_{timesteps}ms_topo_over_layers.avi' if over_layers \
+        else destpath + f'/{model_name}_topography.avi'
 
     os.chdir(save_path)
+
+    if not os.path.isdir(destpath):
+        os.makedirs(destpath, exist_ok=True)
+
 
     if over_layers:
         images = [img for img in os.listdir(image_folder)
@@ -22,7 +30,7 @@ def create_valid_gif(save_path: str, model_name: str = "bert", labels: str = "",
                   img.endswith("png")]
         reordered_images = [(int(img.split(f"layer_")[1].split("_")[0]), img) for img in images]
         reordered_images.sort()
-    print(images)
+    # print(images)
 
     images = [elt[1] for elt in reordered_images]
     # Array images should only consider

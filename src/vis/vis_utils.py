@@ -4,6 +4,7 @@ def build_destination_folder(table_path: str = "",
                              dataset_name: str = "",
                              save_folder: str = "",
                              distance_type: str = "l2",
+                             timesteps: str = "31",
                              corr_type: str = "spearman"):
     label_name = os.path.basename(table_path).split("_")[-2]
     topo_name = os.path.basename(table_path).replace("csv", "png")
@@ -18,9 +19,9 @@ def build_destination_folder(table_path: str = "",
     if not os.path.exists(os.path.join(save_folder, "image")):
         os.mkdir(os.path.join(save_folder, "image"))
 
-    dest_file_path = os.path.join(save_folder, "image", corr_type, distance_type)
+    dest_file_path = os.path.join(save_folder, "image", corr_type, distance_type, f"{timesteps}ms")
 
-    if not os.path.exists(os.path.join(save_folder, "image", corr_type, distance_type)):
-        os.makedirs(os.path.join(save_folder, "image", corr_type, distance_type), exist_ok=True)
+    if not os.path.exists(os.path.join(save_folder, "image", corr_type, distance_type, f"{timesteps}ms")):
+        os.makedirs(os.path.join(save_folder, "image", corr_type, distance_type, f"{timesteps}ms"), exist_ok=True)
 
     return dest_file_path

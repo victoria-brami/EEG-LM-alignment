@@ -10,7 +10,8 @@ class BaseDataset(Dataset):
     Base class for all datasets (Abstract Base Class).
     """
 
-    def __init__(self, config: Union[dict, OmegaConf], tokenizer: Optional[AutoTokenizer] = None):
+    def __init__(self, config: Union[dict, OmegaConf],
+                 tokenizer: Optional[AutoTokenizer] = None):
         self.config = config
         self.datapath = config.datapath
         self.tokenizer = tokenizer
