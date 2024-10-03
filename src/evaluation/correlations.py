@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from typing import Union
+from typing import Union, List
 from .base import BaseTable
 
 
@@ -36,13 +36,24 @@ class CorrelationsTable(BaseTable):
         self.table.loc[len(self.table.index)] = row
 
 
-    def extract_sub_table(self, attribute: str,
-                          value: Union[str, float],
+    def extract_sub_table(self, attribute: Union[str, List[str]],
+                          value: Union[str, float, List[str]],
                           groupby_key: Union[str, list]=None):
 
         if attribute not in self.table.columns:
             raise KeyError(f"Key {attribute} is missing in the table")
-        sub_table = self.table[self.table[attribute] == value]
+        if not isinstance(value, list):
+            sub_table = self.table[self.table[attribute] == value]
+        else:
+            for i, (attr, val) in enumerate(zip(attribute, value)):
+                if i == 0:
+                    sub_table = self.table[self.table[attr] == val]
+                else:
+                    if isinstance(val, list):
+                        sub_table = sub_table[sub_table[attr] in val]
+                    else: sub_table = sub_table[sub_table[attr] == val]
+
+
         if groupby_key is not None:
             if groupby_key not in sub_table:
                 raise KeyError(f"Key {groupby_key} is missing in the table")

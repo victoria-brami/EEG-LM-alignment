@@ -26,3 +26,4 @@ class BaseTable:
 
     def save_table(self):
         self.table.to_csv(self.table_path, index=False)
+        # print("Table saved to {}".format(self.table_path))

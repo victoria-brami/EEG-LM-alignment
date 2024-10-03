@@ -68,7 +68,7 @@ def main(args):
 
     all_ids = np.arange(len(labels))
 
-    if args.focus_label is not None:
+    if args.focus_label is not None and args.focus_label != "none":
         if args.focus_label == "OBJECT":
             all_ids = labels[labels["MATERIAL"] == "YES"].index
         elif args.focus_label == "ABSTRACT":
@@ -169,7 +169,7 @@ def main(args):
 
             word_features = get_model_representations(list_words, model, tokenizer)
 
-        print("Number of words ", word_features.shape[0], word_features.shape)
+        print("Number of words ", word_features.shape[0])
         if len(word_features.shape) == 3:
             word_features = word_features.squeeze(1)
         cosine_word_distances = compute_all_representations_distances(word_features,

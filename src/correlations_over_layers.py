@@ -1,11 +1,11 @@
 import numpy as np
 import argparse
 import os
+import hydra
 
 import pandas as pd
 
 from src.vis import plot_2d_topomap
-from src.config import Config as cfg
 from src.utils import (
     read_table,
     extract_correlations_and_periods,
@@ -13,6 +13,7 @@ from src.utils import (
 )
 from src.evaluation import CorrelationsTable
 from src.vis import build_destination_folder
+from src.dataset import get_dataset
 
 def vis_parser():
     parser = argparse.ArgumentParser()
@@ -50,26 +51,36 @@ def build_source_folder(table_path: str = "",
     pass
 
 
-def main(args):
-    # Load the electrodes names
-    eeg_data = read_table(cfg.DATA)
-    list_electrodes = pd.unique(eeg_data["ELECNAME"])[3:]
-    # Load the electrodes coordinates
-    electrodes_pos = np.load(os.path.join(cfg.MNE_PATH, "locs3d.npy"))[:, :2]
+@hydra.main(config_path='../configs', config_name='visualize')
+def main(config):
+    # # Load the electrodes names
+    # eeg_data = read_table(cfg.DATA)
+    # list_electrodes = pd.unique(eeg_data["ELECNAME"])[3:]
+    # # Load the electrodes coordinates
+    # electrodes_pos = np.load(os.path.join(cfg.MNE_PATH, "locs3d.npy"))[:, :2]
+
+    dataset = get_dataset(config.data, None, config.data.dataname)
+    list_electrodes = dataset.channel_names
+    electrodes_pos = dataset.channels
+
+    if config.data.dataname == "harry_potter":
+        list_electrodes = [list_electrodes[i] for i in range(0, len(list_electrodes), 3)]
+    
 
     # Plot correlations topographies
-    label_name = args.label_name
-    args.save_folder = os.path.join(args.save_folder, label_name)
+    label_name = config.label_name
+    save_folder = os.path.join(config.save_folder, config.data.dataname, label_name)
 
     # if not os.path.exists(os.path.join(args.save_folder, label_name)):
     #     os.mkdir(os.path.join(args.save_folder, label_name))
 
-    corr_save_folder = os.path.join(args.save_folder, "csv")
-    model = args.model
+    corr_save_folder = os.path.join(save_folder, "csv")
+    model = config.model.shortname
     print(model)
+    print(os.listdir(corr_save_folder))
 
     list_corr_names = [filename for filename in os.listdir(corr_save_folder)
-                       if model in filename and "random" not in filename and "layer" in filename and f"{args.timesteps}ms" in filename]
+                       if model in filename and "random" not in filename and "layer" in filename and f"{config.timesteps}ms" in filename]
     print("names", len(list_corr_names))
     print("names", "\n ".join(list_corr_names))
 
@@ -82,16 +93,17 @@ def main(args):
     # Get all tables over the model layers
     list_corr_tabs = [CorrelationsTable(name=tab_name,
                                  table_folder=corr_save_folder,
-                                 table_columns=args.tab_attrs,
+                                 table_columns=config.tab_attrs,
                                  eval=True) for tab_name in list_corr_names]
 
 
 
 
     # Re-order the table by time-wise
-    list_results_grouped_tabs = [corr.extract_sub_table(attribute="distance",
-                                                   value=args.distance,
-                                                   groupby_key="truncate_start") for corr in list_corr_tabs]
+    list_results_grouped_tabs = [
+        corr.extract_sub_table(attribute=["distance"],
+                               value=[config.distance],
+                               groupby_key="truncate_start") for corr in list_corr_tabs]
 
     # Extract the correlations
     pears_corr_values, spear_corr_values, sub_titles = [], [], []
@@ -110,21 +122,21 @@ def main(args):
     spear_corr_values = np.transpose(spear_corr_values, (1, 0, 2))
 
     # Reshape the plots
-    sub_titles = split_into_chunks(sub_titles,  args.chunk_size)
+    sub_titles = split_into_chunks(sub_titles,  config.chunk_size)
 
     # Plot correlations topographies
 
     pears_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path,
-                                                    args.dataset_name,
-                                                    args.save_folder,
-                                                    args.distance,
-                                                    args.timesteps,
+                                                    config.data.dataname,
+                                                    config.save_folder,
+                                                    config.distance,
+                                                    config.timesteps,
                                                     "pearson")
     spear_dest_file_path = build_destination_folder(list_corr_tabs[-1].table_path,
-                                                    args.dataset_name,
-                                                    args.save_folder,
-                                                    args.distance,
-                                                    args.timesteps,
+                                                    config.data.dataname,
+                                                    config.save_folder,
+                                                    config.distance,
+                                                    config.timesteps,
                                                     "spearman")
 
     # print("len Pearson", len(pears_corr_values), pears_corr_values)
@@ -134,13 +146,13 @@ def main(args):
 
     for subtitle_id in range(len(fig_sub_titles)):
         # Reshape the plots
-        pears_corr_val = split_into_chunks(pears_corr_values[subtitle_id], args.chunk_size)
-        spear_corr_val = split_into_chunks(spear_corr_values[subtitle_id], args.chunk_size)
+        pears_corr_val = split_into_chunks(pears_corr_values[subtitle_id], config.chunk_size)
+        spear_corr_val = split_into_chunks(spear_corr_values[subtitle_id], config.chunk_size)
 
         # print(len(pears_corr_val[-1]), len(spear_corr_val[-1]))
 
         plot_2d_topomap(electrodes_pos, pears_corr_val,
-                        dataname=args.dataset_name,
+                        dataname=config.data.dataname,
                         grid_res=1000,
                         rows=n_rows, size=4, cols=n_cols, edgecolor="navy",
                         subfig_name=sub_titles,
@@ -148,14 +160,14 @@ def main(args):
                         savepath=pears_dest_file_path + f"/pearson_{model}_{fig_sub_titles[subtitle_id]}.png")
 
         plot_2d_topomap(electrodes_pos, spear_corr_val,
-                        dataname=args.dataset_name,
+                        dataname=config.data.dataname,
                         grid_res=100,
                         rows=n_rows, size=4, cols=n_cols, edgecolor="navy",
                         subfig_name=sub_titles,
                         coords_name=list_electrodes, dpi=200, title=fig_sub_titles[subtitle_id],
                         savepath=spear_dest_file_path + f"/spearman_{model}_{fig_sub_titles[subtitle_id]}.png")
 
-    print(f"Done for label {args.label_name} !!!")
+    print(f"Done for label {config.label_name} !!!")
 
 
 if __name__ == '__main__':
@@ -165,13 +177,5 @@ if __name__ == '__main__':
              "DEATH", "BODY",  "MEDICAL",  "NATURE", "QUANTITY", "MATERIAL"]
     LABELS = ["MUSIC", "NATURE", "QUANTITY", "RELIGION", "DEATH", "HOUSE", "MOVE", "INDUSTRY", "TIME"]
 
-    # for list_elt in tqdm(LABELS[4:]):
-    #     print(f"\nComputing for label {list_elt} ...")
-    #     args = vis_parser()
-    #     args.model = "canine_s"
-    #     args.distance = "cosine"
-    #     args.chunk_size = 8
-    #     args.label_name = list_elt
-    #     main(args)
-    args = vis_parser()
-    main(args)
+
+    main()

@@ -4,7 +4,24 @@ from matplotlib.patches import Ellipse, Polygon
 from scipy.interpolate import griddata
 
 
-def _prepare_kiloword_topomap(electrodes, head_radius=0.2, cols=None, rows=None, size=3, axs=None, axs_fris=None, **fig_kwargs):
+def project_into_2d(electrodes: np.array) -> np.array:
+    from copy import deepcopy
+    res = np.zeros((electrodes.shape[0], 2))
+    z = np.max(electrodes[:, 1])
+
+    for i in range(electrodes.shape[0]):
+        if electrodes[i, 0] == 0 and electrodes[i, 1] == 0:
+            res[i, 0] = 0
+            res[i, 1] = 0
+        else:
+            res[i, 0] = (electrodes[i, 0]) / (z + (electrodes[i, 2]))
+            res[i, 1] = (electrodes[i, 1]) / (z + (electrodes[i, 2]))
+    return res
+
+
+def _prepare_kiloword_topomap(electrodes: np.array, head_radius: float = 0.2,
+                              cols: int = None, rows: int = None, size: int = 3,
+                              axs=None, axs_fris=None, **fig_kwargs):
     left_ear = Ellipse(electrodes[6], height=head_radius / 4, width=head_radius / 8, facecolor="none", **fig_kwargs)
     right_ear = Ellipse(electrodes[26], height=head_radius / 4, width=head_radius / 8, facecolor="none", **fig_kwargs)
     nose = Polygon([electrodes[4] + np.array([abs(electrodes[4, 0] - electrodes[15, 0]) / 3, 0.]),
@@ -57,7 +74,7 @@ def _prepare_kiloword_topomap(electrodes, head_radius=0.2, cols=None, rows=None,
             #         ax[-1].append(fig.add_subplot(spec[i, j]))
             RATIO = 4
             fig, ax = plt.subplots(rows + 1, cols, figsize=(size * cols, size * rows + size / RATIO),
-                                   gridspec_kw={'height_ratios': [RATIO,RATIO,1]},
+                                   gridspec_kw={'height_ratios': [RATIO, RATIO, 1]},
                                    **fig_kwargs)
             # fig.add_subplot(rows + 1, 1, (rows * cols + 1, (rows + 1) * cols))
             #spec = GridSpec(nrows=rows + 1, ncols=cols, figure=fig) #, **fig_kwargs)
@@ -93,7 +110,21 @@ def _prepare_kiloword_topomap(electrodes, head_radius=0.2, cols=None, rows=None,
     return fig, ax, ax_fris
 
 
-def _prepare_ubira_topomap(electrodes, head_radius=0.2, cols=None, rows=None, size=3, axs=None, **fig_kwargs):
+def _prepare_ubira_topomap(electrodes, head_radius=0.2,
+                           cols=None, rows=None, size=3,
+                           axs=None,  axs_fris=None, head_center=None,
+                           **fig_kwargs):
+    """
+
+    :param electrodes:
+    :param head_radius:
+    :param cols:
+    :param rows:
+    :param size:
+    :param axs:
+    :param fig_kwargs:
+    :return:
+    """
     if (rows, cols) in [(1, 1), (None, None)]:
         left_ear = Ellipse(electrodes[8], height=head_radius / 4, width=head_radius / 8, facecolor="none", **fig_kwargs)
         right_ear = Ellipse(electrodes[25], height=head_radius / 4, width=head_radius / 8, facecolor="none",
@@ -162,13 +193,141 @@ def _prepare_ubira_topomap(electrodes, head_radius=0.2, cols=None, rows=None, si
     return fig, ax
 
 
-def _prepare_topomap(electrodes, dataname, cols=None, rows=None, size=3, axs=None, **fig_kwargs):
+# TODO: prepare harrypotter topomap
+def _prepare_hp_topomap(electrodes, head_radius=0.2,
+                        cols=None, rows=None, size=3, axs=None,
+                        axs_fris=None, head_center=None, **fig_kwargs):
+    """
+
+
+    :param electrodes:
+    :param head_radius:
+    :param cols:
+    :param rows:
+    :param size:
+    :param axs:
+    :param fig_kwargs:
+    :return:
+    """
+    # head_center = [(electrodes_3d[24, 0] + electrodes_3d[25, 0]) / 2,
+    #                (electrodes_3d[24, 1] + electrodes_3d[25, 1]) / 2]
+    # electrodes_3d[:, :2] -= head_center
+    # electrodes = project_into_2d(electrodes_3d)
+    # head_radius = np.max(electrodes[:, 1]) - np.min(electrodes[:, 1]) + 0.1
+
+    if (rows, cols) in [(1, 1), (None, None)]:
+        left_ear = Ellipse(electrodes[54] - np.array([head_radius / 12, 0]),
+                           height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                           **fig_kwargs)
+        right_ear = Ellipse(electrodes[98] + np.array([head_radius / 12, 0]),
+                            height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                            **fig_kwargs)
+        nose = Polygon([[electrodes[28, 0], electrodes[28, 1] + head_radius / 6],
+                        [electrodes[30, 0], electrodes[30, 1] + head_radius / 10],
+                        [electrodes[17, 0], electrodes[17, 1] + head_radius / 10]],
+                       facecolor="none", **fig_kwargs)
+
+        col = "white" if axs is None else "none"
+        ellipse = Ellipse(electrodes[23], height=head_radius, width=head_radius, facecolor=col, **fig_kwargs)
+        if axs is None:
+            fig, ax = plt.subplots(figsize=(size * cols, size * rows), **fig_kwargs)
+        else:
+            ax = axs
+        ax.add_patch(nose)
+        ax.add_patch(left_ear)
+        ax.add_patch(right_ear)
+        ax.add_patch(ellipse)
+        ax.set_aspect("equal")
+    elif rows == 1 and cols > 1:
+        if axs is None:
+            fig, ax = plt.subplots(rows, cols, figsize=(size * cols, size * rows), **fig_kwargs)
+        else:
+            ax = axs
+        for j in range(cols):
+            left_ear = Ellipse(electrodes[54] - np.array([head_radius / 12, 0]),
+                               height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                               **fig_kwargs)
+            right_ear = Ellipse(electrodes[98] + np.array([head_radius / 12, 0]),
+                                height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                                **fig_kwargs)
+            nose = Polygon([[electrodes[28, 0], electrodes[28, 1] + head_radius / 6],
+                            [electrodes[30, 0], electrodes[30, 1] + head_radius / 10],
+                            [electrodes[17, 0], electrodes[17, 1] + head_radius / 10]],
+                           facecolor="none", **fig_kwargs)
+            col = "white" if axs is None else "none"
+            ellipse = Ellipse(
+                head_center + np.array([0, (np.max(electrodes[:, 1]) + np.min(electrodes[:, 1])) / 2 + 0.2]),
+                height=head_radius, width=head_radius, facecolor=col, **fig_kwargs)
+            ax[j].add_patch(nose)
+            ax[j].add_patch(left_ear)
+            ax[j].add_patch(right_ear)
+            ax[j].add_patch(ellipse)
+            ax[j].set_aspect("equal")
+    else:
+        if axs is None:
+            RATIO = 4
+            fig, ax = plt.subplots(rows + 1, cols, figsize=(size * cols, size * rows + size / RATIO),
+                                   gridspec_kw={'height_ratios': [RATIO, RATIO, 1]},
+                                   **fig_kwargs)
+            # fig.add_subplot(rows + 1, 1, (rows * cols + 1, (rows + 1) * cols))
+            # spec = GridSpec(nrows=rows + 1, ncols=cols, figure=fig) #, **fig_kwargs)
+            # ax_fris = fig.add_subplot(spec[-1, :])
+            ax_fris = fig.add_subplot(rows + 1, 1, rows + 1, adjustable='box',
+                                      aspect=12, anchor=(-0.25, 0.15))
+            ax_fris.margins(x=0.15, y=0)
+            ax_fris.set_xticks([])
+            ax_fris.set_yticks([])
+
+        else:
+            ax = axs
+            ax_fris = axs_fris
+        for i in range(rows):
+            for j in range(cols):
+                left_ear = Ellipse(electrodes[54] - np.array([head_radius / 12, 0]),
+                                   height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                                   **fig_kwargs)
+                right_ear = Ellipse(electrodes[98] + np.array([head_radius / 12, 0]),
+                                    height=head_radius / 4, width=head_radius / 8, facecolor="none",
+                                    **fig_kwargs)
+                nose = Polygon([[electrodes[28, 0], electrodes[28, 1] + head_radius / 6],
+                                [electrodes[30, 0], electrodes[30, 1] + head_radius / 10],
+                                [electrodes[17, 0], electrodes[17, 1] + head_radius / 10]],
+                               facecolor="none", **fig_kwargs)
+                col = "white" if axs is None else "none"
+                ellipse = Ellipse(
+                    head_center + np.array([0, (np.max(electrodes[:, 1]) + np.min(electrodes[:, 1])) / 2 + 0.2]),
+                    height=head_radius, width=head_radius, facecolor=col, **fig_kwargs)
+                if axs is None:
+                    ax[i, j].add_patch(nose)
+                ax[i, j].add_patch(left_ear)
+                ax[i, j].add_patch(right_ear)
+                ax[i, j].add_patch(ellipse)
+                ax[i, j].set_aspect("equal")
+    if axs is not None:
+        return ax, ax_fris
+    return fig, ax, ax_fris
+
+
+def _prepare_topomap(electrodes, dataname,
+                     cols=None, rows=None, size=3,
+                     axs=None, head_center=None,
+                     **fig_kwargs):
     if dataname == "kiloword":
         head_radius = np.linalg.norm(electrodes[25, :2] - electrodes[8, :2])
         return _prepare_kiloword_topomap(electrodes, head_radius, cols, rows, size, axs=axs, **fig_kwargs)
     elif dataname == "ubira":
         head_radius = np.linalg.norm(electrodes[25, :2] - electrodes[8, :2])
         return _prepare_ubira_topomap(electrodes, head_radius, cols, rows, size, axs=axs, **fig_kwargs)
+    elif dataname == "harry_potter":
+
+        # head_center = [(electrodes[24, 0] + electrodes[25, 0]) / 2,
+        #                (electrodes[24, 1] + electrodes[25, 1]) / 2]
+        # electrodes[:, :2] -= head_center
+        # electrodes2d = project_into_2d(electrodes)
+        head_radius = np.max(electrodes[:, 1]) - np.min(electrodes[:, 1]) + 0.1
+        # print("head radius", head_radius)
+        return _prepare_hp_topomap(electrodes, head_radius, cols, rows, size,
+                                   axs=axs, head_center=head_center, **fig_kwargs)
 
 
 def plot_2d_topomap(coords, values, dataname,
@@ -188,10 +347,24 @@ def plot_2d_topomap(coords, values, dataname,
     plt.rcParams["axes.spines.top"] = False
     plt.rcParams["axes.spines.bottom"] = False
 
-    grid_x, grid_y = np.meshgrid(np.linspace(coords.min() - margin, coords.max() + margin, grid_res),
-                                 np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
+    if dataname == "harry_potter":
+        coords = coords[0:-1:3, :]
+        head_center = [(coords[24, 0] + coords[25, 0]) / 2,
+                       (coords[24, 1] + coords[25, 1]) / 2]
+        coords[:, :2] -= head_center
+        coords2d = project_into_2d(coords)
 
-    fig, ax, ax_fris = _prepare_topomap(coords, dataname, rows=rows, cols=cols, size=size, **fig_kwargs)
+        # coords_name = [coords_name[i] for i in range(0, len(coords_name), 3)]
+
+        head_radius = np.max(coords2d[:, 1]) - np.min(coords2d[:, 1]) + 0.1
+    else:
+        coords2d = coords
+        head_center = None
+
+    grid_x, grid_y = np.meshgrid(np.linspace(coords2d.min() - margin, coords2d.max() + margin, grid_res),
+                                 np.linspace(coords2d.min() - margin, coords2d.max() + margin, grid_res))
+
+    fig, ax, ax_fris = _prepare_topomap(coords2d, dataname, rows=rows, cols=cols, size=size, head_center=head_center, **fig_kwargs)
     list_contours = []
 
     if (rows, cols) in [(1, 1), (None, None)]:
@@ -231,11 +404,11 @@ def plot_2d_topomap(coords, values, dataname,
             for j in range(cols):
                 if j > len(values[i]) - 1:
                     break
-                grid_x, grid_y = np.meshgrid(np.linspace(coords.min() - margin, coords.max() + margin, grid_res),
-                                             np.linspace(coords.min() - margin, coords.max() + margin, grid_res))
+                grid_x, grid_y = np.meshgrid(np.linspace(coords2d.min() - margin, coords2d.max() + margin, grid_res),
+                                             np.linspace(coords2d.min() - margin, coords2d.max() + margin, grid_res))
 
-                grid_z = griddata(coords, values[i][j], (grid_x, grid_y), method="cubic")
-                print(i, j)
+                grid_z = griddata(coords2d[:, :2], values[i][j], (grid_x, grid_y), method="cubic")
+
                 contour = ax[i][j].contourf(grid_x, grid_y, grid_z, levels=np.linspace(vmin, vmax, 100),
                                             cmap=cmap, vmin=vmin, vmax=vmax)
                 list_contours.append(contour)
@@ -243,15 +416,15 @@ def plot_2d_topomap(coords, values, dataname,
                 # Re-plot the ears nose, etc
                 # n_ax = _prepare_topomap(coords, dataname, rows=1, cols=1, size=size, axs=ax[i, j], **fig_kwargs)
 
-                ax[i][j].scatter(coords[:, 0],
-                                 coords[:, 1],
+                ax[i][j].scatter(coords2d[:, 0],
+                                 coords2d[:, 1],
                                  c=values[i][j],
                                  edgecolors="grey",
                                  linewidths=0.5,
                                  cmap=cmap)
 
                 if coords_name is not None:
-                    for (xi, yi), text in zip(coords, coords_name):
+                    for (xi, yi), text in zip(coords2d[:, :2], coords_name):
                         ax[i][j].annotate(text,
                                           xy=(xi, yi), xycoords='data',
                                           xytext=(0.5, 2.5), textcoords='offset points', fontsize=8)
@@ -264,11 +437,12 @@ def plot_2d_topomap(coords, values, dataname,
 
         # Set the timeline bar
         time_range = [int(title.split(" ")[0]), int(title.split(" ")[2])]
-        ax_fris.broken_barh([(0, 1000), (time_range[0], time_range[1] - time_range[0])], (0, 2), facecolors=('lightgray', 'brown'))
+        ax_fris.broken_barh([(0, 500), (time_range[0], time_range[1] - time_range[0])], (0, 2),
+                            facecolors=('lightgray', 'brown'))
         ax_fris.annotate(f'{time_range[0]}ms', xy=(time_range[0], 2), xytext=(0, 10),
-                    textcoords="offset points", ha='center', va='bottom', fontsize=14)
+                         textcoords="offset points", ha='center', va='bottom', fontsize=14)
         ax_fris.annotate(f'{time_range[1]}ms', xy=(time_range[1], 2), xytext=(0, 10),
-                           textcoords="offset points", ha='center', va='bottom', fontsize=14)
+                         textcoords="offset points", ha='center', va='bottom', fontsize=14)
 
         if title is not None:
             fig.suptitle(title, fontsize=20)

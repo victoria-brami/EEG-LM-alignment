@@ -13,6 +13,9 @@ from pyxdameraulevenshtein import (
 )
 from sklearn.metrics.pairwise import cosine_similarity
 from itertools import combinations
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 def get_model(model_name: str):
     model = AutoModel.from_pretrained(model_name)
@@ -128,6 +131,32 @@ def compute_all_representations_distances(features,
         distances.extend(dist)
     return distances
 
+def compute_all_optimized_representations_distances(features,
+                                          list_paired_indices,
+                                          norm="l2",
+                                          normalize=True):
+    distances = []
+    # Compute all the distances
+    if norm == "cosine":
+        distance_matrix = cosine_similarity(features, features)
+    else:
+        if normalize:
+            normed_features = features / np.linalg.norm(features, axis=1)[:, None]
+        else:
+            normed_features = features
+
+        # use the decomposition (X - Y)**2 = X**2 + Y**2 - 2*XY.T
+        distance_matrix = np.abs(-2 * np.dot(normed_features, normed_features.T)
+               + np.sum(normed_features ** 2, axis=1)
+               + np.sum(normed_features ** 2, axis=1)[:, np.newaxis])**0.5
+
+    # Remove the values from the diagonal (always equal to one)
+    mask = np.array(np.ones((len(features), len(features))) - np.eye(len(features)), dtype=bool)
+    mask = np.tri(len(features), len(features), -1, dtype=bool).transpose()
+    distances = distance_matrix[mask]
+
+    return distances
+
 
 def compute_correlations(eegs,
                          cosine_word_distances,
@@ -138,7 +167,13 @@ def compute_correlations(eegs,
                          corr_table,
                          pad_step=10,
                          timesteps=31):
-    for start_trunc in range(0, eegs.shape[-1] - timesteps + 1, pad_step):
+    from time import time
+
+    logger.info("Computing all the distances between the features")
+
+
+    for start_trunc in tqdm(range(0, eegs.shape[-1] - timesteps + 1, pad_step), desc="Computing correlations for each time range"):
+        start = time()
         period = range(start_trunc, start_trunc + timesteps)
 
         # Restrict to channel-level analysis
@@ -166,10 +201,13 @@ def compute_correlations(eegs,
                         "spearman": None}
 
             # reshaped_eegs = reegs.mean(1)
-            cosine_distances = compute_all_representations_distances(reshaped_eegs, list_paired_indices, norm="cosine")
-            l2_distances = compute_all_representations_distances(reshaped_eegs, list_paired_indices)
+
+            cosine_distances = compute_all_optimized_representations_distances(reshaped_eegs, list_paired_indices, norm="cosine")
+            l2_distances = compute_all_optimized_representations_distances(reshaped_eegs, list_paired_indices)
+
 
             if cosine_word_distances is not None:
+
                 pears_cos, _ = pearsonr(cosine_word_distances, cosine_distances)
                 spear_cos, _ = spearmanr(cosine_word_distances, cosine_distances)
 
@@ -179,6 +217,7 @@ def compute_correlations(eegs,
                 corr_table.update_table(row_dict)
 
             if l2_word_distances is not None:
+
                 pears_l2, _ = pearsonr(l2_word_distances, l2_distances)
                 spear_l2, _ = spearmanr(l2_word_distances, l2_distances)
 
@@ -206,3 +245,4 @@ def compute_correlations(eegs,
                 corr_table.update_table(row_dict)
 
             corr_table.save_table()
+        logger.info(f" Took {time() - start:.3f} seconds")

@@ -1,6 +1,7 @@
 import os
 import hydra
 import torch
+import logging
 import numpy as np
 from src.dataset import get_dataset
 from src.analysis import (
@@ -13,33 +14,40 @@ from src.analysis import (
 )
 from src.evaluation import CorrelationsTable
 
+logger = logging.getLogger(__name__)
 
 
 @hydra.main(config_path='../configs', config_name='correlations')
 def main(config):
-
     # Initialize the dataset
 
     model, tokenizer = get_model(config.model.name)
     dataset = get_dataset(config.data, tokenizer, config.data.dataname)
+    logger.info(f'Loaded data, {len(dataset)} samples')
 
     # Initialize the language model used
-    list_words = [dataset[i]["word"] for i in range(len(dataset))] # getattr(dataset, "list_words")
+    list_words = [dataset[i]["word"] for i in range(len(dataset))]  # getattr(dataset, "list_words")
     list_paired_words = all_pairs(list_words)
     list_paired_indices = all_pairs(range(len(list_words)))
 
     # Initialize the Correlations' table
     # Initialize Experiment table
-    if config.model.layer != -1:
-        config.tab_name = config.tab_name.replace(config.model.shortname, f"{config.model.shortname}_layer_{config.model.layer}")
-    corr_save_folder = config.save_folder
+    # if config.model.layer != -1:
+    #     config.tab_name = config.tab_name.replace(config.model.shortname, )
+    rep_name = f"{config.model.shortname}_layer_{config.model.layer}"
+    config.tab_name = "_".join([rep_name, str(config.timesteps) + "ms", config.tab_name])
+    corr_save_folder = os.path.join(config.save_folder, config.data.dataname)
+
+    if config.data.labels is not None:
+        corr_save_folder = os.path.join(corr_save_folder, "_".join(config.data.labels))
+    corr_save_folder = os.path.join(corr_save_folder, "csv")
+    os.makedirs(corr_save_folder, exist_ok=True)
+
     corr = CorrelationsTable(name=config.tab_name,
                              table_folder=corr_save_folder,
                              table_columns=config.tab_attrs)
 
-
     dl_word_distances = None
-
 
     if config.word_distance == "levenshtein":
         dl_word_distances = compute_all_dl_distance(list_paired_words, normalize=True)
@@ -66,7 +74,7 @@ def main(config):
         l2_word_distances = compute_all_representations_distances(word_features,
                                                                   list_paired_indices)
     eeg_signals = np.stack([dataset[i]["raw_eeg_input_ids"] for i in range(len(dataset))])
-    list_electrodes = dataset.channels["#NAME"]
+    list_electrodes = dataset.channel_names
 
     compute_correlations(eeg_signals,
                          cosine_word_distances,

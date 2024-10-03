@@ -96,6 +96,23 @@ def project_3d_coordinates_in_plan(coords: np.array,) -> np.array:
     return coords
 
 
+def project_into_2d(electrodes: np.array,) -> np.array:
+    from copy import deepcopy
+    res = np.zeros((electrodes.shape[0], 2))
+    z = np.max(electrodes[:, 1])
+
+    for i in range(electrodes.shape[0]):
+        # if electrodes[i, 2] < 0:
+        #     continue
+        if electrodes[i, 0] == 0 and electrodes[i, 1] == 0:
+            res[i, 0] = 0
+            res[i, 1] = 0
+        else:
+            res[i, 0] = (electrodes[i, 0]) / (z + (electrodes[i, 2]))
+            res[i, 1] = (electrodes[i, 1]) / (z + (electrodes[i, 2]))
+    return res
+
+
 
 class UBIRADataset(BaseDataset):
 
@@ -120,6 +137,7 @@ class UBIRADataset(BaseDataset):
 
     def _load_channels(self):
         self.channels = pd.read_csv(os.path.join(self.datapath, "locs3d.csv"))
+        self.channel_names = self.channels["#NAME"]
 
     def _get_sentence_wise_data(self, sent_id: str, mode: str = "average", power: bool = True) -> List:
 
@@ -232,9 +250,11 @@ class KilowordDataset(BaseDataset):
 
     def _load_labels(self):
         self.labels = pd.read_csv(os.path.join(self.datapath, "words_and_pos.csv"))
-        self.labels_df = parse_table_labels(self.labels, LIST_LABELS,  # Here self.filter_labels must be LIST_LABELS
-                                            labelcolname="SEMANTIC_FIELD")
-
+        if self.filter_labels == "none":
+            self.filter_labels = None
+        else:
+            self.labels_df = parse_table_labels(self.labels, LIST_LABELS,  # Here self.filter_labels must be LIST_LABELS
+                                                labelcolname="SEMANTIC_FIELD")
         # Filter the labels
         if self.filter_labels is not None:
             if self.filter_labels == "OBJECT":
@@ -290,7 +310,7 @@ class HarryPotterMEGDataset(BaseDataset):
 
     def _load_labels(self):
         # Load the alternative one if we use the label PRON+AUX
-        if "PRON+AUX" in self.config.label_name:
+        if "PRON+AUX" in self.filter_labels:
             with open(os.path.join(self.datapath, "sentences_and_pos_extended.json"), "r") as json_file:
                 self.sent_data = json.load(json_file)
         else:
@@ -312,7 +332,64 @@ class HarryPotterMEGDataset(BaseDataset):
 
     def _load_data(self):
         """ Method to load the EEG data and its corresponding labels"""
-        raise NotImplementedError
+        start_id = 0
+        debug_text = open(os.path.join(self.datapath, "debug_align.txt"), "w")
+        lwords = np.load("/home/viki/Downloads/words.npy")
+        for fold in self.config.list_folders:
+            subject_path = os.path.join(self.datapath, fold)
+            subject_file = os.listdir(subject_path)
+            if self.config.sampling_rate != 1000:
+                # shape (N, C, T)
+                subject_meg_data = np.load(os.path.join(subject_path, subject_file[0]))
+            else:
+                import h5py
+                # shape (N, )
+                subject_meg_data = h5py.File(os.path.join(subject_path, subject_file[0]))
+
+            # Loop on all words of the dataset
+            num_words = []
+            for sent_id in range(len(self.split_sent_data)):
+                sent_length = len(self.split_sent_data[sent_id]["word_ids"])
+                num_words.extend(self.split_sent_data[sent_id]["word_ids"])
+                for i, word_id in enumerate(self.split_sent_data[sent_id]["word_ids"]):
+                    prev_pos = None
+                    next_pos = None
+                    prev_word = None
+                    next_word = None
+                    pos = self.split_sent_data[sent_id]["pos"][i][1]
+                    word = self.split_sent_data[sent_id]["pos"][i][0]
+                    raw_eeg = subject_meg_data[word_id]
+                    if i < sent_length - 1:
+                        next_pos = self.split_sent_data[sent_id]["pos"][i + 1][1]
+                        next_word = self.split_sent_data[sent_id]["pos"][i + 1][0]
+                    if i > 0:
+                        prev_pos = self.split_sent_data[sent_id]["pos"][i - 1][1]
+                        prev_word = self.split_sent_data[sent_id]["pos"][i - 1][0]
+
+                    sample = {
+                        "id": word_id,
+                        "sent_id": sent_id,
+                        "word": word,
+                        "pos": pos,
+                        "prev_pos": prev_pos,
+                        "next_pos": next_pos,
+                        "prev_word": prev_word,
+                        "next_word": next_word,
+                        "subject_id": fold[-1],
+                        "raw_eeg_input_ids": raw_eeg,
+                    }
+                    # Apply Specific label filtering if needed
+                    if self.filter_labels is not None and sample["pos"] not in self.filter_labels:
+                        continue
+                    self.data.append(sample)
+            #         debug_text.write(f"Index {word_id}: {word} {lwords[word_id]}\n")
+            # missing = 0
+            # for l in range(5176):
+            #     if l not in num_words:
+            #         print(f"Missing index {l}: {lwords[l]}")
+            #         missing += 1
+            # print("NUM WORDS MISSING ",  missing)
+            debug_text.close()
 
     def _get_dataset_words(self):
         """ Method to get all the words paired to a given signal """
@@ -329,13 +406,15 @@ def get_dataset(config: Union[Dict, OmegaConf],
         return KilowordDataset(config, tokenizer)
     elif dataname.lower() == "ubira":
         return UBIRADataset(config, tokenizer)
+    elif dataname.lower() == "harry_potter":
+        return HarryPotterMEGDataset(config, tokenizer)
 
 
 if __name__ == '__main__':
-    conf = OmegaConf.load("../configs/data/ubira.yaml")
+    conf = OmegaConf.load("../../configs/data/harry_potter_downsampled.yaml")
     print(conf)
     config = conf
-    dataset = UBIRADataset(config)
+    dataset = get_dataset(config, None, "harry_potter")
     print("Data Length", len(dataset), "\n")
     # print([dataset[i]["id"] for i in range(len(dataset))])
     # print(dataset[86])
