@@ -3,11 +3,10 @@ import os
 
 import hydra
 import numpy as np
-import pandas as pd
 
 from eeglm.dataset import get_dataset
 from eeglm.evaluation import CorrelationsTable
-from eeglm.utils import extract_correlations_and_periods, read_table, split_into_chunks
+from eeglm.utils import extract_correlations_and_periods, split_into_chunks
 from eeglm.vis import build_destination_folder, plot_2d_topomap
 
 

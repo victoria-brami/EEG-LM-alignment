@@ -1,6 +1,6 @@
 from itertools import combinations
 from logging import getLogger
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Union
 
 import numpy as np
 import pandas as pd
