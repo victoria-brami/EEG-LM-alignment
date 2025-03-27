@@ -8,7 +8,7 @@ the Part-Of-Speech, the semantic field and the tangibility for each word of the 
 ## Installation and dependencies
 To clone the repo:
 ```
-    git clone https://github.com/victoria-brami/kiloword.git
+    git clone https://github.com/victoria-brami/EEG-LM-alignment.git
 ```
 Then installing the packages:
 ```
@@ -21,11 +21,18 @@ Then installing the packages:
 
 To compute the Pearson and Spearman correlations between the EEG signals and the pairwise bert distances:
 ```
-    python3.10 -m kiloword.get_correlations --word_dist_repr bert --eeg_path <path_to_eeg_recordings> --timesteps 30 --labels_path <path_to_kiloword_labels> --save_folder <folder_name> --tab_name <csv_correlations_name>
+    python3.10 -m eeglm.get_correlations \
+            --word_dist_repr bert \
+            --eeg_path <path_to_eeg_recordings> \
+            --timesteps 30 \
+            --labels_path <path_to_kiloword_labels> \
+            --save_folder <folder_name> \
+            --tab_name <csv_correlations_name>
 ```
 To visualize the evolution of the correlations:
 ```
-    python3.10 -m kiloword.correlations_visualisation --tab_name <csv_correlations_name>
+    python3.10 -m eeglm.correlations_visualisation \
+                      --tab_name <csv_correlations_name>
 ```
 Here is an example of the different plots generated
 
