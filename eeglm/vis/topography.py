@@ -134,8 +134,8 @@ def _prepare_kiloword_topomap(
             fig, ax = plt.subplots(
                 rows + 1,
                 cols,
-                figsize=(size * cols, size * rows + size / RATIO),
-                gridspec_kw={"height_ratios": [RATIO, RATIO, 1]},
+                figsize=(size * cols, size * rows + size // RATIO),
+                gridspec_kw={"height_ratios": [RATIO, RATIO, RATIO, 1]},
                 **fig_kwargs,
             )
             # fig.add_subplot(rows + 1, 1, (rows * cols + 1, (rows + 1) * cols))

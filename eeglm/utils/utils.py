@@ -109,4 +109,7 @@ def get_model(model_id: str, load_random: bool = False):
     else:
         model = AutoModel.from_pretrained(model_id)
 
+    if "llama" in model_id:
+        tokenizer.pad_token = tokenizer.eos_token
+
     return model, tokenizer

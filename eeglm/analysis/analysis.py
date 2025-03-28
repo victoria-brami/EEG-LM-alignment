@@ -1,3 +1,4 @@
+import sys
 from itertools import combinations
 from logging import getLogger
 from typing import Callable, List, Union
@@ -5,6 +6,7 @@ from typing import Callable, List, Union
 import numpy as np
 import pandas as pd
 import torch
+from PIL import Image, ImageDraw, ImageFont
 from pyxdameraulevenshtein import (
     damerau_levenshtein_distance,
     normalized_damerau_levenshtein_distance,
@@ -18,6 +20,49 @@ from transformers import AutoModel, AutoTokenizer
 from eeglm.utils import normalize_data
 
 logger = getLogger(__name__)
+
+
+def create_image(
+    word: str,
+    font_path: str = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    font_size: int = 32,
+):
+    """From a give word, generates the image with the word written on it.
+
+    Args:
+        word (str): word to generate the image from
+        font_path (str, optional): font style path. Defaults to "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf".
+        font_size (int, optional): _description_. Defaults to 32.
+    """
+    # Create a blank white image
+    image = Image.new("RGB", (224, 224), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+
+    # Load the font
+    try:
+        # font = ImageFont.load("arial.pil")
+        font = ImageFont.truetype(
+            font_path, font_size
+        )  # You may need to adjust the font size
+    except IOError:
+        print("Font file not found. Make sure the path is correct.")
+        sys.exit(1)
+
+    # Get the size of the text to be drawn
+    text_size = draw.textlength(word, font=font), font_size
+    # text_size = draw.textsize(word, font=font)
+
+    # Calculate the position (center the text)
+    position = ((224 - text_size[0]) // 2, (224 - text_size[1]) // 2)
+
+    # Draw the text onto the image
+    draw.text(position, word, fill=(0, 0, 0), font=font)
+
+    # Save the image
+    image.save("output_image.png")
+    print("Image saved as 'output_image.png'")
+
+    return np.asarray(image)
 
 
 def extract_same_time_window_rows(
@@ -283,3 +328,7 @@ def compute_correlations(
 
             corr_table.save_table()
         logger.info(f" Took {time() - start:.3f} seconds")
+
+
+if __name__ == "__main__":
+    im = create_image("linguist", font_size=48)

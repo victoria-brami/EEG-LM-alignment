@@ -1,10 +1,13 @@
+import os
+
+
 class Config:
-    MNE_PATH = "/home/victoria-brami/Documents/personal/mne_data"  # mne.datasets.kiloword.data_path(download=True)
-    LABELS_PATH = MNE_PATH / "words_and_pos.csv"
-    SEMANTICS_PATH = MNE_PATH / "kiloword_semantic_labels.csv"
-    DATA = MNE_PATH / "KWORD_ERP_LEXICAL_DECISION_DGMH2015.csv"
-    DATATXT = MNE_PATH / "KWORD_ERP_LEXICAL_DECISION_DGMH2015.txt"
-    METADATA = MNE_PATH / "KWORD_VARIABLES_DGMH2015.txt"
+    MNE_PATH = "./data"  # "/home/victoria-brami/Documents/personal/mne_data"  # mne.datasets.kiloword.data_path(download=True)
+    LABELS_PATH = os.path.join(MNE_PATH, "words_and_pos.csv")
+    SEMANTICS_PATH = os.path.join(MNE_PATH, "kiloword_semantic_labels.csv")
+    DATA = os.path.join(MNE_PATH, "KWORD_ERP_LEXICAL_DECISION_DGMH2015.csv")
+    DATATXT = os.path.join(MNE_PATH, "KWORD_ERP_LEXICAL_DECISION_DGMH2015.txt")
+    METADATA = os.path.join(MNE_PATH, "KWORD_VARIABLES_DGMH2015.txt")
     LIST_LABELS = [
         "ENTERTAINMENT",
         "LOCATION",

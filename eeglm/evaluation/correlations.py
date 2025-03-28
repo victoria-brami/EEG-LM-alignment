@@ -1,18 +1,22 @@
 import os
+from typing import List, Union
+
 import pandas as pd
-from typing import Union, List
+
 from .base import BaseTable
 
 
 class CorrelationsTable(BaseTable):
 
-    def __init__(self,
-                 name: str = None,
-                 table_folder: str = None,
-                 table_columns: list = None,
-                 eval: bool = False):
+    def __init__(
+        self,
+        name: str = None,
+        table_folder: str = None,
+        table_columns: list = None,
+        eval: bool = False,
+    ):
 
-        self.table_struct = {col: [] for col in table_columns}
+        self.table_struct: dict[str, any] = {col: [] for col in table_columns}
         self.eval = eval
         super().__init__(name, table_folder)
         self._load_table()
@@ -30,15 +34,21 @@ class CorrelationsTable(BaseTable):
             self.table = pd.DataFrame(self.table_struct)
 
     def update_table(self, data_dict_row: dict = None):
-        if set(self.table.columns).intersection(set(data_dict_row.keys())) != set(self.table.columns):
-            raise KeyError(f"Missing key(s) in data:  {set(self.table.columns) ^ set(data_dict_row.keys())}")
+        if set(self.table.columns).intersection(set(data_dict_row.keys())) != set(
+            self.table.columns
+        ):
+            raise KeyError(
+                f"Missing key(s) in data:  {set(self.table.columns) ^ set(data_dict_row.keys())}"
+            )
         row = [data_dict_row[k] for k in self.table.columns]
         self.table.loc[len(self.table.index)] = row
 
-
-    def extract_sub_table(self, attribute: Union[str, List[str]],
-                          value: Union[str, float, List[str]],
-                          groupby_key: Union[str, list]=None):
+    def extract_sub_table(
+        self,
+        attribute: Union[str, List[str]],
+        value: Union[str, float, List[str]],
+        groupby_key: Union[str, list] = None,
+    ):
 
         if attribute not in self.table.columns:
             raise KeyError(f"Key {attribute} is missing in the table")
@@ -51,8 +61,8 @@ class CorrelationsTable(BaseTable):
                 else:
                     if isinstance(val, list):
                         sub_table = sub_table[sub_table[attr] in val]
-                    else: sub_table = sub_table[sub_table[attr] == val]
-
+                    else:
+                        sub_table = sub_table[sub_table[attr] == val]
 
         if groupby_key is not None:
             if groupby_key not in sub_table:

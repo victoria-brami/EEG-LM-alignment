@@ -1,5 +1,6 @@
 import argparse
 import os
+from logging import getLogger
 
 import numpy as np
 import pandas as pd
@@ -9,19 +10,21 @@ from eeglm.evaluation import CorrelationsTable
 from eeglm.utils import extract_correlations_and_periods, read_table, split_into_chunks
 from eeglm.vis import plot_2d_topomap
 
+logger = getLogger()
+
 
 def vis_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--save_folder",
         type=str,
-        default="/home/viki/Downloads/kiloword_correlations",
+        default="./data/kiloword",
         help="folder where the experiments are saved",
     )
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default="/home/viki/mne_data/MNE-kiloword-data",
+        default="./data",
         help="Path to where all the info of the dataset is stored",
     )
     parser.add_argument(
@@ -103,6 +106,10 @@ def main(args):
         eval=True,
     )
 
+    # log max
+    print(f"Pearson max: {corr.table['pearson'].max().item():.4f}")
+    print(f"Spearman max: {corr.table['spearman'].max().item():.4f}")
+
     # Re-order the table by time-wise
     results_grouped_table = corr.extract_sub_table(
         attribute="distance", value=args.distance, groupby_key="truncate_start"
@@ -112,6 +119,7 @@ def main(args):
     pears_corr_values, spear_corr_values, sub_titles = extract_correlations_and_periods(
         results_grouped_table
     )
+    print("len Pearson", len(pears_corr_values))
     # Reshape the plots
     pears_corr_values = split_into_chunks(pears_corr_values, 8)
     spear_corr_values = split_into_chunks(spear_corr_values, 8)
@@ -134,6 +142,7 @@ def main(args):
     plot_2d_topomap(
         electrodes_pos,
         pears_corr_values,
+        dataname="kiloword",
         grid_res=100,
         rows=n_rows,
         size=4,
@@ -141,6 +150,7 @@ def main(args):
         edgecolor="navy",
         subfig_name=sub_titles,
         coords_name=list_electrodes,
+        title="0 to 100",
         dpi=200,
         savepath=pears_dest_file_path,
     )
@@ -148,6 +158,7 @@ def main(args):
     plot_2d_topomap(
         electrodes_pos,
         spear_corr_values,
+        dataname="kiloword",
         grid_res=100,
         rows=n_rows,
         size=4,
@@ -155,6 +166,7 @@ def main(args):
         edgecolor="navy",
         subfig_name=sub_titles,
         coords_name=list_electrodes,
+        title="0 to 100",
         dpi=200,
         savepath=spear_dest_file_path,
     )

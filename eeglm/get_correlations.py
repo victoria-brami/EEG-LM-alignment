@@ -1,6 +1,8 @@
 import argparse
 import os.path
+import re
 from copy import deepcopy
+from logging import getLogger
 
 import numpy as np
 import pandas as pd
@@ -54,6 +56,8 @@ LIST_LABELS = [
     "FEELING",
 ]
 
+logger = getLogger(__name__)
+
 
 def arg_parser():
     parser = argparse.ArgumentParser()
@@ -66,7 +70,7 @@ def arg_parser():
     parser.add_argument(
         "--save_folder",
         type=str,
-        default="/home/viki/Downloads/kiloword",
+        default="./data/kiloword",
         help="folder where the experiments are saved",
     )
     parser.add_argument(
@@ -84,7 +88,6 @@ def arg_parser():
     parser.add_argument(
         "--use_model_cache",
         action="store_true",
-        default=True,
         help="whether to load pre-computed word representations or not",
     )
     parser.add_argument(
@@ -116,20 +119,22 @@ def arg_parser():
         ],
         help="Word representations type",
     )
+
+    parser.add_argument("--layer", type=int, default=-1, help="")
+
     parser.add_argument(
         "--word_dist_repr",
         type=str,
-        default="bert",
-        choices=[
-            "bert-base-uncased",
-            "meta-llama/Llama-3.2-1B",
-        ],
+        default="bert-base-uncased",
+        # choices=[
+        #     "bert-base-uncased",
+        #     "meta-llama/Llama-3.2-1B",
+        # ],
         help="Word representations type",
     )
     parser.add_argument(
         "--use_random",
         action="store_true",
-        type=bool,
         help="Word representations type",
     )
     parser.add_argument(
@@ -157,6 +162,8 @@ def arg_parser():
 
 
 def main(args):
+
+    logger.info(f"Using model: {re.sub(r'\.\./|/', '', args.word_dist_repr)}")
     # Download the labels
     labels = read_table(args.labels_path)
     labels_table = parse_table_labels(
@@ -176,9 +183,12 @@ def main(args):
     else:
         args.tab_name = "_".join(["ALL", args.tab_name])
 
-    rep_name = args.word_dist_repr
-    if rep_name == "bert":
-        rep_name = "bert_layer_12"
+    rep_name = re.sub(r"\.\./|/", "", args.word_dist_repr)
+    if args.use_random:
+        rep_name = "random_" + rep_name
+    if args.layer != -1:
+        rep_name += f"_layer_{args.layer}"
+
     args.tab_name = "_".join([rep_name, str(args.timesteps) + "ms", args.tab_name])
     # Get the list of words and their pairs
     list_words = labels["WORD"].values[all_ids]
@@ -251,7 +261,9 @@ def main(args):
 
             model, tokenizer = get_model(args.word_dist_repr, args.use_random)
 
-            word_features = get_model_representations(list_words, model, tokenizer)
+            word_features = get_model_representations(
+                list_words, model, layer=args.layer, tokenizer=tokenizer
+            )
 
         print("Number of words ", word_features.shape[0])
         if len(word_features.shape) == 3:
